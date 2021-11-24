@@ -1,0 +1,153 @@
+---
+title: "Simulation Results"
+author: "Elizabeth Chase"
+date: "11/5/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+binomial_results <- read_csv("binomial_results.csv")
+binomial_aug_results <- read_csv("binomial_aug_results.csv")
+poisson_results <- read_csv("poisson_results.csv")
+poisson_aug_results <- read_csv("poisson_aug_results.csv")
+gaussian_results <- read_csv("gaussian_results.csv")
+gaussian_aug_results <- read_csv("gaussian_aug_results.csv")
+monotonic_results <- read_csv("monotonic_results.csv")
+plm_results <- read_csv("plm_results.csv")
+```
+
+## Binomial Results
+
+```{r binomial}
+ggplot(data = filter(binomial_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Absolute Difference, Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Credible Interval Width, Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Credible Interval Coverage, Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="div")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Divergences, Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="time")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Computing Time (seconds), Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="rhat")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Parameters with RHat Divergence, Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="min_samp_bulk")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Bulk Effective Samples, Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="min_samp_tail")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Tail Effective Samples, Binomial Outcome, 100 Replicates")
+
+ggplot(data = filter(binomial_results, score=="treedepth")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Treedepth Warnings, Binomial Outcome, 100 Replicates")
+```
+## Poisson Results
+
+```{r poisson}
+ggplot(data = filter(poisson_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Absolute Difference, Poisson Outcome, 100 Replicates")
+
+ggplot(data = filter(poisson_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Credible Interval Width, Poisson Outcome, 100 Replicates") + coord_cartesian(ylim = c(0, 10))
+
+ggplot(data = filter(poisson_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Credible Interval Coverage, Poisson Outcome, 100 Replicates")
+
+ggplot(data = filter(poisson_results, score=="div")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Divergences, Poisson Outcome, 100 Replicates")
+
+ggplot(data = filter(poisson_results, score=="time")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Computing Time (seconds), Poisson Outcome, 100 Replicates")
+
+ggplot(data = filter(poisson_results, score=="rhat")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Parameters with RHat Divergence, Poisson Outcome, 100 Replicates")
+
+ggplot(data = filter(poisson_results, score=="min_samp_bulk")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Bulk Effective Samples, Poisson Outcome, 100 Replicates")
+
+ggplot(data = filter(poisson_results, score=="min_samp_tail")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Tail Effective Samples, Poisson Outcome, 100 Replicates")
+
+ggplot(data = filter(poisson_results, score=="treedepth")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Treedepth Warnings, Poisson Outcome, 100 Replicates")
+```
+
+## Gaussian Results
+
+```{r gaussian}
+ggplot(data = filter(gaussian_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Absolute Difference, Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Credible Interval Width, Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Credible Interval Coverage, Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="div")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Divergences, Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="time")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Computing Time (seconds), Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="rhat")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Parameters with RHat Divergence, Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="min_samp_bulk")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Bulk Effective Samples, Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="min_samp_tail")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Tail Effective Samples, Gaussian Outcome, 100 Replicates")
+
+ggplot(data = filter(gaussian_results, score=="treedepth")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Treedepth Warnings, Gaussian Outcome, 100 Replicates")
+```
+
+## Monotonic Results
+
+```{r monotonic}
+ggplot(data = filter(monotonic_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Absolute Difference, Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Credible Interval Width, Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Credible Interval Coverage, Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="div")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Divergences, Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="time")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Computing Time (seconds), Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="rhat")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Parameters with RHat Divergence, Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="min_samp_bulk")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Bulk Effective Samples, Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="min_samp_tail")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Tail Effective Samples, Monotonic Outcome, 100 Replicates")
+
+ggplot(data = filter(monotonic_results, score=="treedepth")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Treedepth Warnings, Monotonic Outcome, 100 Replicates")
+```
+
+## PLM Results
+```{r plm}
+ggplot(data = filter(plm_results, score=="mad_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Absolute Difference, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Mean Credible Interval Width, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="cover_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Credible Interval Coverage, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="div")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Divergences, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="time")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Computing Time (seconds), Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="rhat")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Parameters with RHat Divergence, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="min_samp_bulk")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Bulk Effective Samples, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="min_samp_tail")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Minimum Tail Effective Samples, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="treedepth")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Proportion of Posterior Samples with Treedepth Warnings, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta1_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Bias of Beta 1, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta1_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Coverage of Beta 1, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta2_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Bias of Beta 2, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta2_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Coverage of Beta 2, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta3_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Bias of Beta 3, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta3_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Coverage of Beta 3, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta4_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Bias of Beta 4, Gaussian PLM, 100 Replicates")
+
+ggplot(data = filter(plm_results, score=="beta4_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 2) + theme_bw() + ggtitle("Coverage of Beta 4, Gaussian PLM, 100 Replicates")
+
+```
+
+## Augmentation Results
+
+Gaussian:
+
+Binomial:
+
+Poisson:
