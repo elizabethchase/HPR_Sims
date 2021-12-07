@@ -29,16 +29,22 @@ The paper that Phil shared with me also found that a non-imaging dosimetric call
 First, some descriptive statistics:
 ```{r descript, echo = FALSE}
 print("Distribution of VQ 20:")
+quantile(rilt_data$`low VQ 20`[rilt_data$LungToxicityBool==1])
+quantile(rilt_data$`low VQ 20`[rilt_data$LungToxicityBool==0])
 quantile(rilt_data$`low VQ 20`)
 
 print("Distribution of ADL:")
+quantile(rilt_data$AD2L[rilt_data$LungToxicityBool==1])
+quantile(rilt_data$AD2L[rilt_data$LungToxicityBool==0])
 quantile(rilt_data$AD2L)
 
 print("Which lung irradiated:")
 table(rilt_data$Structure)
+table(rilt_data$Structure, rilt_data$LungToxicityBool)
 
 print("Lung Toxicity Distribution (grades 0-5):")
 table(rilt_data$`Lung Toxicity Grade`)
+table(rilt_data$`Lung Toxicity Grade`, rilt_data$LungToxicityBool)
 
 print("Lung Toxicity Distribution (binary):")
 table(rilt_data$LungToxicityBool)
@@ -54,29 +60,52 @@ ggplot(data = rilt_data) + geom_point(aes(x = AD2L, y = `low VQ 20`, shape = Str
 
 At present, I'm fitting two models: one with only VQ20 as an HPR predictor, and another model with VQ20 as the HPR predictor, and with ADL and which lung as linear predictors. Results:
 ```{r hpr, echo = FALSE}
+rilt_data$VQ20 <- rilt_data$`low VQ 20`
+
 X <- as.matrix(rilt_data$`low VQ 20`, ncol = 1)
 y <- rilt_data$LungToxicityBool
 Z <- as.matrix(cbind(rilt_data$AD2L, as.numeric(rilt_data$Structure=="RIGHT_LUNG-GTV")))
 
 uni_hpr1 <- hpr(y = y, X = X, family = "binomial")
 curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "VQ20 (HPR)"
+curve_estim1$Model <- "HPR"
+
+uni_gpr1 <- gam(LungToxicityBool ~ s(VQ20, bs = "gp"), data = rilt_data, family = "binomial")
+gp_fit_lin <- predict(uni_gpr1, newdata = rilt_data, type = "link", se.fit = TRUE)
+
+mycurvefits <- data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = rilt_data$VQ20, "Mean" = NA);
+mycurvefits$Model <- "GPR"
+
+loessfit <- predict(loess(LungToxicityBool ~ VQ20, data = rilt_data), se = T)
+mycurvefits_loess <- data.frame("Median" = loessfit$fit, "Lower" = loessfit$fit - 1.96*loessfit$se.fit, "Upper" = loessfit$fit + 1.96*loessfit$se.fit, "x" = rilt_data$VQ20, "Mean" = NA);
+mycurvefits_loess$Model <- "LOESS"
+
+fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits_loess)
 
 uni_hpr2 <- hpr(y = y, X = X, Z = Z, family = "binomial")
-coeff_estims2 <- get_betas(uni_hpr2, alpha = 0.05, var_names = c("ADL", "RightLung"))
-curve_estim2 <- get_f(uni_hpr2, alpha = 0.05)
-curve_estim2$Model <- "VQ20 (HPR), Structure (Linear), ADL (Linear)"
+coeff_estims_hpr <- get_betas(uni_hpr2, alpha = 0.05, var_names = c("ADL", "RightLung"))
+pred_estim <- get_preds(uni_hpr2, alpha = 0.05)
+hpr_resid <- data.frame("Residual" = rilt_data$LungToxicityBool - pred_estim$Median, "Model" = "HPR", "x" = rilt_data$VQ20)
 
-ggplot() + geom_line(data = curve_estim1, aes(x = x, y = Median)) + geom_ribbon(data = curve_estim1, aes(x = x, ymin = Lower, ymax = Upper), alpha = 0.2) + geom_point(data = rilt_data, aes(x = `low VQ 20`, y = LungToxicityBool)) + theme_bw() + ylab("Probability") + xlab("VQ 20") + ggtitle("No Linear Predictors")
+uni_gpr2 <- gam(LungToxicityBool ~ s(VQ20, bs = "gp") + factor(Structure) + AD2L, data = rilt_data, family = "binomial")
+pred_estim2 <- predict(uni_gpr2, newdata = rilt_data)
+gpr_resid <- data.frame("Residual" = rilt_data$LungToxicityBool - plogis(pred_estim2), "Model" = "GPR", "x" = rilt_data$VQ20)
 
-ggplot() + geom_line(data = curve_estim2, aes(x = x, y = Median)) + geom_ribbon(data = curve_estim2, aes(x = x, ymin = Lower, ymax = Upper), alpha = 0.2) + geom_point(data = rilt_data, aes(x = `low VQ 20`, y = LungToxicityBool)) + theme_bw() + ylab("Probability") + xlab("VQ 20") + ggtitle("Lung Location and ADL as Linear Predictors")
+coeff_estims_gpr <- data.frame("Variable" = c("RightLung", "ADL"), "Median" = exp(summary(uni_gpr2)$p.coeff[-1]), "Lower" = exp(summary(uni_gpr2)$p.coeff[-1] - 1.96*summary(uni_gpr2)$se[2:3]), "Upper" = exp(summary(uni_gpr2)$p.coeff[-1] + 1.96*summary(uni_gpr2)$se[2:3]))
 
-row.names(coeff_estims2) <- NULL
-coeff_estims2$Median <- round(coeff_estims2$Median, digits = 2)
-coeff_estims2$Mean <- round(coeff_estims2$Mean, digits = 2)
-coeff_estims2$Lower <- round(coeff_estims2$Lower, digits = 2)
-coeff_estims2$Upper <- round(coeff_estims2$Upper, digits = 2)
-kable(coeff_estims2, col.names = c("Variable", "Median OR", "Mean OR", "Lower", "Upper"))
+resid_full <- rbind(hpr_resid, gpr_resid)
+pretty_coeffs <- data.frame("Model" = c("HPR", "GPR"), "ADL" = c(paste0(round(coeff_estims_hpr$Median[1], digits = 2), " (", round(coeff_estims_hpr$Lower[1], digits = 2), ", ", round(coeff_estims_hpr$Upper[1], digits = 2), ")"), paste0(round(coeff_estims_gpr$Median[2], digits = 2), " (", round(coeff_estims_gpr$Lower[2], digits = 2), ", ", round(coeff_estims_gpr$Upper[2], digits = 2), ")")), "RightLung" = c(paste0(round(coeff_estims_hpr$Median[2], digits = 2), " (", round(coeff_estims_hpr$Lower[2], digits = 2), ", ", round(coeff_estims_hpr$Upper[2], digits = 2), ")"), paste0(round(coeff_estims_gpr$Median[1], digits = 2), " (", round(coeff_estims_gpr$Lower[1], digits = 2), ", ", round(coeff_estims_gpr$Upper[1], digits = 2), ")")))
+
+unadj_plot <- ggplot() + geom_line(data = fulldat, aes(x = x, y = Median, color = Model), size=1) + geom_ribbon(data = fulldat, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = rilt_data, aes(x = `low VQ 20`, y = LungToxicityBool)) + theme_bw() + ylab("Probability of RILT") + xlab("V/Q 20 (%)") + scale_x_continuous(breaks = seq(0, 0.4, by = 0.1), labels = seq(0, 0.4, by = 0.1)*100)
+
+ggsave("unadj_plot.pdf", unadj_plot, width = 6, height = 6)
+
+adj_plot <- ggplot() + geom_point(data = resid_full, aes(x = x, y = Residual)) + theme_bw() + facet_wrap(~ Model, nrow = 1) + ylab("Residual") + xlab("V/Q 20 (%)") + scale_x_continuous(breaks = seq(0, 0.4, by = 0.1), labels = seq(0, 0.4, by = 0.1)*100)
+
+ggsave("adj_plot.pdf", adj_plot, width = 6, height = 6)
+
+row.names(pretty_coeffs) <- NULL
+kable(pretty_coeffs, col.names = c("Model", "ADL", "Right Lung"))
 ```
 
 Things I could change:
@@ -84,32 +113,3 @@ Things I could change:
 - I could also constrain this to be monotonic, but I haven't done that yet and the fit doesn't seem to suffer that much for it.
 
 - I could try modeling ADL as a second HPR term. 
-
-\newpage
-
-For comparison, the results from GPR:
-```{r gpr, echo = FALSE}
-rilt_data$VQ20 <- rilt_data$`low VQ 20`
-
-uni_gpr1 <- gam(LungToxicityBool ~ s(VQ20, bs = "gp"), data = rilt_data, family = "binomial")
-gp_fit_lin <- predict(uni_gpr1, newdata = rilt_data, type = "link", se.fit = TRUE)
-
-mycurvefits <- data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = rilt_data$VQ20);
-
-uni_gpr <- gam(LungToxicityBool ~ s(VQ20, bs = "gp") + factor(Structure) + AD2L, data = rilt_data, family = "binomial")
-gp_fit_fs <- predict(uni_gpr, newdata = rilt_data, type = "terms", se.fit = TRUE)
-
-mycurvefits2 <- data.frame("Median" = plogis(gp_fit_fs$fit[,"s(VQ20)"]), "Lower" = plogis(gp_fit_fs$fit[,"s(VQ20)"] - 1.96*gp_fit_fs$se.fit[,"s(VQ20)"]), "Upper" = plogis(gp_fit_fs$fit[,"s(VQ20)"] + 1.96*gp_fit_fs$se.fit[,"s(VQ20)"]), "x" = rilt_data$VQ20)
-      
-mybetafits <- data.frame("Variable" = c("RightLung", "ADL"), "Median" = exp(summary(uni_gpr)$p.coeff[-1]), "Lower" = exp(summary(uni_gpr)$p.coeff[-1] - 1.96*summary(uni_gpr)$se[2:3]), "Upper" = exp(summary(uni_gpr)$p.coeff[-1] + 1.96*summary(uni_gpr)$se[2:3]))
-       
-ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper), alpha = 0.2) + geom_point(data = rilt_data, aes(x = `low VQ 20`, y = LungToxicityBool)) + theme_bw() + ylab("Probability") + xlab("VQ 20") + ggtitle("No Linear Predictors")
-
-ggplot() + geom_line(data = mycurvefits2, aes(x = x, y = Median)) + geom_ribbon(data = mycurvefits2, aes(x = x, ymin = Lower, ymax = Upper), alpha = 0.2) + geom_point(data = rilt_data, aes(x = `low VQ 20`, y = LungToxicityBool)) + theme_bw() + ylab("Probability") + xlab("VQ 20") + ggtitle("Lung Location and ADL as Linear Predictors")
-
-row.names(mybetafits) <- NULL
-mybetafits$Median <- round(mybetafits$Median, digits = 2)
-mybetafits$Lower <- round(mybetafits$Lower, digits = 2)
-mybetafits$Upper <- round(mybetafits$Upper, digits = 2)
-kable(mybetafits, col.names = c("Variable", "OR", "Lower", "Upper"))
-```
