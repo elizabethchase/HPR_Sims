@@ -2,7 +2,7 @@ bigstep: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
             myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*6 + (x > 5 & x <= 6)*10 + (x > 6 & x <= 8)*12 + (x > 8)*20};
             y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
             true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 75
+  n: 100
   sd: 1
   $preds: X
   $outcome: y
@@ -12,7 +12,7 @@ smooth: R(  X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
             myfunc <- function(x){qlogis((x/11) + 0.01)};
             y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
             true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 75
+  n: 100
   sd: 0.5
   $preds: X
   $outcome: y

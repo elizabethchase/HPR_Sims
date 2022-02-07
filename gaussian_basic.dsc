@@ -2,7 +2,7 @@ bigstep: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
             myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*6 + (x > 5 & x <= 6)*1 + (x > 6 & x <= 8)*3 + (x > 8)*10};
             y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
             true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 75
+  n: 100
   sd: 0.5
   $preds: X
   $outcome: y
@@ -12,7 +12,7 @@ smallstep: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
               myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*1 + (x > 5 & x <= 6)*2 + (x > 6 & x <= 8)*1 + (x > 8)*3};
               y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
               true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 75
+  n: 100
   sd: 0.5
   $preds: X
   $outcome: y
@@ -22,7 +22,7 @@ smooth: R(  X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
             myfunc <- function(x){abs(sin(x))};
             y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
             true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 75
+  n: 100
   sd: 0.5
   $preds: X
   $outcome: y
@@ -32,7 +32,7 @@ joinpoint: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
               myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)};
               y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
               true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 75
+  n: 100
   sd: 0.5
   $preds: X
   $outcome: y

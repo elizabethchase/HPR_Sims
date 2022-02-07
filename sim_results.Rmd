@@ -26,11 +26,11 @@ plm_results <- read_csv("plm_results.csv")
 ## Binomial Results
 
 ```{r binomial_perf}
-mad_bin <- ggplot(data = filter(binomial_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank())
+mad_bin <- ggplot(data = filter(binomial_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + coord_cartesian(ylim = c(0, 0.3))
 
 width_bin <- ggplot(data = filter(binomial_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank())
 
-cover_bin <- ggplot(data = filter(binomial_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank())
+cover_bin <- ggplot(data = filter(binomial_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
 n <- 75
@@ -99,11 +99,11 @@ ggsave("bin_perf.pdf", bin_perf, width = 8, height = 12)
 ## Poisson Results
 
 ```{r poisson_perf}
-mad_bin <- ggplot(data = filter(poisson_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank())
+mad_bin <- ggplot(data = filter(poisson_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + coord_cartesian(ylim = c(0, 1.5))
 
-width_bin <- ggplot(data = filter(poisson_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + coord_cartesian(ylim = c(0, 8))
+width_bin <- ggplot(data = filter(poisson_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + coord_cartesian(ylim = c(1, 8))
 
-cover_bin <- ggplot(data = filter(poisson_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank())
+cover_bin <- ggplot(data = filter(poisson_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
 n <- 75
@@ -172,11 +172,11 @@ ggsave("pois_perf.pdf", pois_perf, width = 8, height = 12)
 ## Gaussian Results
 
 ```{r gaussian_perf}
-mad_bin <- ggplot(data = filter(gaussian_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+mad_bin <- ggplot(data = filter(gaussian_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + coord_cartesian(ylim = c(0,1))
 
 width_bin <- ggplot(data = filter(gaussian_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
 
-cover_bin <- ggplot(data = filter(gaussian_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+cover_bin <- ggplot(data = filter(gaussian_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
 n <- 75
@@ -259,6 +259,10 @@ sample_plot <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, c
 
 gaus_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4)
 ggsave("gaus_perf.pdf", gaus_perf, width = 8, height = 12)
+
+sample_plot2 <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y)) + geom_line(data = sim_data,aes(x = x, y = truth)) + facet_wrap(~simulate, nrow = 2, scales = "free_y") + theme_bw() + theme(legend.position = "bottom") + ylab("y")
+
+ggsave("samplefits.pdf", sample_plot2, width = 8, height = 10)
 ```
 
 ## Computational Results
@@ -290,11 +294,11 @@ ggsave("comp_perf.pdf", comp_plot, width = 8, height = 12)
 ## Monotonic Results
 
 ```{r monotonic}
-mad_bin <- ggplot(data = filter(monotonic_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+mad_bin <- ggplot(data = filter(monotonic_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + coord_cartesian(ylim = c(0, 0.6))
 
-width_bin <- ggplot(data = filter(monotonic_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+width_bin <- ggplot(data = filter(monotonic_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) 
 
-cover_bin <- ggplot(data = filter(monotonic_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+cover_bin <- ggplot(data = filter(monotonic_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
 n <- 75
@@ -369,11 +373,11 @@ ggsave("mono_comp.pdf", mono_comp, width = 8, height = 12)
 
 ## PLM Results
 ```{r plm}
-mad_bin <- ggplot(data = filter(plm_results, score=="mad_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(axis.text.x = element_text(angle = 90))
+mad_bin <- ggplot(data = filter(plm_results, score=="mad_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(axis.text.x = element_text(angle = 90)) + coord_cartesian(ylim = c(0, 0.6))
 
-width_bin <- ggplot(data = filter(plm_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+width_bin <- ggplot(data = filter(plm_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) 
 
-cover_bin <- ggplot(data = filter(plm_results, score=="cover_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+cover_bin <- ggplot(data = filter(plm_results, score=="cover_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + geom_hline(yintercept = 0.95, color = "red")
 
 plm_traj <- plot_grid(mad_bin, width_bin, cover_bin, nrow = 3)
 ggsave("plm_traj.pdf", plm_traj, width = 8, height = 10)
@@ -394,7 +398,19 @@ beta_set$Beta <- case_when(
   grepl("beta4", beta_set$score) ~ "beta4",
 )
 
-beta_cover <- ggplot(data = filter(beta_set, grepl("cover", score))) + geom_boxplot(aes(x = analyze, y = score.metric, color = Beta)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom")
+beta_agg <- filter(beta_set, grepl("cover", score)) %>% group_by(Beta, analyze, simulate) %>% summarize(coverage = mean(score.metric))
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+n = 3
+cols = gg_color_hue(n)
+
+beta_agg$coverage[beta_agg$Beta=="beta1" & beta_agg$simulate=="bigstep" & beta_agg$analyze=="Pspline"] <- beta_agg$coverage[beta_agg$Beta=="beta1" & beta_agg$simulate=="bigstep" & beta_agg$analyze=="Pspline"] - 0.002
+
+beta_cover <- ggplot(data = beta_agg) + geom_point(aes(x = Beta, y = coverage, color = analyze)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom") + scale_color_manual(name = "Method", values = cols) + geom_hline(yintercept = 0.95, color = "red")
 
 plm_betas <- plot_grid(beta1_bias, beta2_bias, beta3_bias, beta4_bias, beta_cover, nrow = 5)
 ggsave("plm_betas.pdf", plm_betas, width = 8, height = 12)
@@ -406,19 +422,14 @@ Gaussian:
 ```{r gaussian_aug_perf}
 gaussian_aug_results$analyze <- factor(gaussian_aug_results$analyze, levels = c("HPR_obs", "HPR_five", "HPR_one"), labels = c("Observed", "0.5", "0.1"), ordered = TRUE)
 
-mad_obs <- ggplot(data = filter(gaussian_aug_results, score=="mad_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference \nat Observed Points") + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+mad_obs <- ggplot(data = filter(gaussian_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top") + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points"))
 
-mad_aug <- ggplot(data = filter(gaussian_aug_results, score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+width_obs <- ggplot(data = filter(gaussian_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74"))
 
-width_obs <- ggplot(data = filter(gaussian_aug_results, score=="width_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width \nat Observed Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+cover_obs <- ggplot(data = filter(gaussian_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
 
-width_aug <- ggplot(data = filter(gaussian_aug_results, score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
 
-cover_obs <- ggplot(data = filter(gaussian_aug_results, score=="cover_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage \nat Observed Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
-
-cover_aug <- ggplot(data = filter(gaussian_aug_results, score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("Augmented Grid Density") + ylab("Credible Interval Coverage \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90, hjust=1))
-
-gaus_aug_perf <- plot_grid(mad_obs, mad_aug, width_obs, width_aug, cover_obs, cover_aug, nrow = 6)
+gaus_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3)
 ggsave("gaus_aug_perf.pdf", gaus_aug_perf, width = 8, height = 14)
 ```
 
@@ -426,19 +437,14 @@ Binomial:
 ```{r binomial_aug_perf}
 binomial_aug_results$analyze <- factor(binomial_aug_results$analyze, levels = c("HPR_obs", "HPR_five", "HPR_one"), labels = c("Observed", "0.5", "0.1"), ordered = TRUE)
 
-mad_obs <- ggplot(data = filter(binomial_aug_results, score=="mad_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference \nat Observed Points") + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+mad_obs <- ggplot(data = filter(binomial_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top") + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points")) + coord_cartesian(ylim = c(0, 0.35))
 
-mad_aug <- ggplot(data = filter(binomial_aug_results, score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+width_obs <- ggplot(data = filter(binomial_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74"))
 
-width_obs <- ggplot(data = filter(binomial_aug_results, score=="width_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width \nat Observed Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+cover_obs <- ggplot(data = filter(binomial_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
 
-width_aug <- ggplot(data = filter(binomial_aug_results, score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
 
-cover_obs <- ggplot(data = filter(binomial_aug_results, score=="cover_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage \nat Observed Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
-
-cover_aug <- ggplot(data = filter(binomial_aug_results, score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("Augmented Grid Density") + ylab("Credible Interval Coverage \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90, hjust=1))
-
-bin_aug_perf <- plot_grid(mad_obs, mad_aug, width_obs, width_aug, cover_obs, cover_aug, nrow = 6)
+bin_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3)
 ggsave("bin_aug_perf.pdf", bin_aug_perf, width = 8, height = 14)
 ```
 
@@ -446,18 +452,29 @@ Poisson:
 ```{r poisson_aug_perf}
 poisson_aug_results$analyze <- factor(poisson_aug_results$analyze, levels = c("HPR_obs", "HPR_five", "HPR_one"), labels = c("Observed", "0.5", "0.1"), ordered = TRUE)
 
-mad_obs <- ggplot(data = filter(poisson_aug_results, score=="mad_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference \nat Observed Points") + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+mad_obs <- ggplot(data = filter(poisson_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top") + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points")) + coord_cartesian(ylim = c(0, 3))
 
-mad_aug <- ggplot(data = filter(poisson_aug_results, score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+width_obs <- ggplot(data = filter(poisson_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + coord_cartesian(ylim = c(2.5, 25)) + scale_fill_manual(values = c("mediumpurple4", "grey74"))
 
-width_obs <- ggplot(data = filter(poisson_aug_results, score=="width_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width \nat Observed Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+cover_obs <- ggplot(data = filter(poisson_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
 
-width_aug <- ggplot(data = filter(poisson_aug_results, score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
 
-cover_obs <- ggplot(data = filter(poisson_aug_results, score=="cover_obs")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage \nat Observed Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
-
-cover_aug <- ggplot(data = filter(poisson_aug_results, score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("Augmented Grid Density") + ylab("Credible Interval Coverage \nat Augmented Points") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90, hjust=1))
-
-pois_aug_perf <- plot_grid(mad_obs, mad_aug, width_obs, width_aug, cover_obs, cover_aug, nrow = 6)
+pois_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3)
 ggsave("pois_aug_perf.pdf", pois_aug_perf, width = 8, height = 14)
+```
+
+Implied prior:
+```{r hpr_prior}
+x <- seq(0, 10, by = 0.01)
+delta <- 0.01
+
+lambda <- rcauchy(length(x)-1, 0, 1)
+tau <- rcauchy(1, 0, 1)
+h <- rnorm(length(x)-1, 0, 1)
+inc <- lambda*tau*h*delta
+hpr <- cumsum(c(0, inc))
+
+mydat <- data.frame("x" = x, "y" = hpr)
+
+ggplot(data = mydat) + geom_line(aes(x = x, y = y)) + theme_bw()
 ```

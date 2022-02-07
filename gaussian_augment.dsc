@@ -48,9 +48,9 @@ HPR_one: R( library(HPR);
   $comp_perf: mycompperf
   
 mad_obs: R( library(dplyr);
-        mergedat <- left_join(yhat, y_true, by = c("x"));
+        mergedat <- left_join(y_true, yhat, by = c("x"));
         mergedat$mad <- abs(mergedat$Median - mergedat$truth);
-        mean_abs_diff <- mean(mergedat$mad, na.rm = TRUE))
+        mean_abs_diff <- mean(mergedat$mad))
   yhat: $curve_fit
   y_true : $truth
   $metric: mean_abs_diff
@@ -67,9 +67,9 @@ mad_aug: R( library(dplyr);
   $metric: mean_abs_diff
   
 width_obs: R( library(dplyr);
-          mergedat <- left_join(yhat, y_true, by = c("x"));
+          mergedat <- left_join(y_true, yhat, by = c("x"));
           mergedat$width <- mergedat$Upper - mergedat$Lower;
-          cred_width <- mean(mergedat$width, na.rm = TRUE))
+          cred_width <- mean(mergedat$width))
   yhat: $curve_fit
   y_true : $truth
   $metric: cred_width
@@ -77,7 +77,6 @@ width_obs: R( library(dplyr);
 width_aug: R( library(dplyr);
         mergedat <- left_join(yhat, y_true, by = c("x"));
         subdat <- mergedat[is.na(mergedat$truth),];
-        subdat$truth <- true_func(subdat$x);
         subdat$width <- subdat$Upper - subdat$Lower;
         cred_width <- mean(subdat$width))
   yhat: $curve_fit
@@ -86,9 +85,9 @@ width_aug: R( library(dplyr);
   $metric: cred_width
 
 cover_obs: R( library(dplyr);
-          mergedat <- left_join(yhat, y_true, by = c("x"));
+          mergedat <- left_join(y_true, yhat, by = c("x"));
           mergedat$cover <- as.numeric(mergedat$truth <= mergedat$Upper & mergedat$truth >= mergedat$Lower);
-          cred_cover <- mean(mergedat$cover, na.rm = TRUE))
+          cred_cover <- mean(mergedat$cover))
   yhat: $curve_fit
   y_true : $truth
   $metric: cred_cover
