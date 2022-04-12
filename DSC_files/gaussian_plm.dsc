@@ -109,62 +109,41 @@ Pspline: R( library(gamlss);
   $pred_fit: mypredfits
   $comp_perf: mycompperf
   
-mad_adj: R( library(dplyr);
-        mergedat <- left_join(yhat, f_true, by = c("x"));
-        adj_factor <- mean(mergedat$Median);
-        mergedat$Median <- mergedat$Median - adj_factor;
-        mergedat$truth2 <- scale(mergedat$truth, scale = FALSE);
-        mergedat$mad <- abs(mergedat$Median - mergedat$truth2);
-        mean_abs_diff <- mean(mergedat$mad))
-  yhat: $curve_fit
-  f_true : $truth
-  $metric: mean_abs_diff
-  
 pred_diff: R( my_pred_diff <- mean(abs(pred_hat$Median - y_true)))
   pred_hat: $pred_fit
   y_true : $true_y
   $metric: my_pred_diff
   
-beta1_bias: R(  beta1_bias <- abs(beta_true$beta[1] - beta_hat$Median[1]))
-  beta_hat: $beta_fit
-  beta_true : $true_betas
-  $metric: beta1_bias
+pred_cover: R( my_pred_cover <- mean(as.numeric(y_true >= pred_hat$Lower & y_true <= pred_hat$Upper)))
+  pred_hat: $pred_fit
+  y_true : $true_y
+  $metric: my_pred_cover
   
-beta2_bias: R(  beta2_bias <- abs(beta_true$beta[2] - beta_hat$Median[2]))
-  beta_hat: $beta_fit
-  beta_true : $true_betas
-  $metric: beta2_bias
-  
-beta3_bias: R(  beta3_bias <- abs(beta_true$beta[3] - beta_hat$Median[3]))
-  beta_hat: $beta_fit
-  beta_true : $true_betas
-  $metric: beta3_bias
-  
-beta4_bias: R(  beta4_bias <- abs(beta_true$beta[4] - beta_hat$Median[4]))
-  beta_hat: $beta_fit
-  beta_true : $true_betas
-  $metric: beta4_bias
-
-width: R( library(dplyr);
-          mergedat <- left_join(yhat, f_true, by = c("x"));
-          mergedat$width <- mergedat$Upper - mergedat$Lower;
-          cred_width <- mean(mergedat$width))
-  yhat: $curve_fit
-  f_true : $truth
+pred_width: R( library(dplyr);
+          pred_hat$width <- pred_hat$Upper - pred_hat$Lower;
+          cred_width <- mean(pred_hat$width))
+  pred_hat: $pred_fit
   $metric: cred_width
-
-cover_adj: R( library(dplyr);
-          mergedat <- left_join(yhat, f_true, by = c("x"));
-          adj_factor <- mean(mergedat$Median);
-          mergedat$Lower <- mergedat$Lower - adj_factor;
-          mergedat$Upper <- mergedat$Upper - adj_factor;
-          mergedat$truth2 <- scale(mergedat$truth, scale = FALSE);
-          mergedat$cover <- as.numeric(mergedat$truth2 <= mergedat$Upper & mergedat$truth2 >= mergedat$Lower);
-          cred_cover <- mean(mergedat$cover))
-  yhat: $curve_fit
-  f_true : $truth
-  $metric: cred_cover
   
+beta1_value: R(  beta1 <- beta_hat$Median[1])
+  beta_hat: $beta_fit
+  $metric: beta1
+  
+beta2_value: R(  beta2 <- beta_hat$Median[2])
+  beta_hat: $beta_fit
+  beta_true : $true_betas
+  $metric: beta2
+  
+beta3_value: R(  beta3 <- beta_hat$Median[3])
+  beta_hat: $beta_fit
+  beta_true : $true_betas
+  $metric: beta3
+  
+beta4_value: R(  beta4 <- beta_hat$Median[4])
+  beta_hat: $beta_fit
+  beta_true : $true_betas
+  $metric: beta4
+
 beta1_cover: R(  beta1_cover <- as.numeric(beta_true$beta[1] >= beta_hat$Lower[1] & beta_true$beta[1] <= beta_hat$Upper[1]))
   beta_hat: $beta_fit
   beta_true : $true_betas
@@ -214,5 +193,5 @@ DSC:
     presimulate: presim
     simulate: bigstep, smooth
     analyze: HPR, GPR, Pspline
-    score: mad_adj, pred_diff, beta1_bias, beta2_bias, beta3_bias, beta4_bias, width, cover_adj, beta1_cover, beta2_cover, beta3_cover, beta4_cover, div, time, rhat, min_samp_bulk, min_samp_tail, treedepth
+    score: pred_diff, pred_cover, pred_width, beta1_value, beta2_value, beta3_value, beta4_value, beta1_cover, beta2_cover, beta3_cover, beta4_cover, div, time, rhat, min_samp_bulk, min_samp_tail, treedepth
   run: presimulate * simulate * analyze * score

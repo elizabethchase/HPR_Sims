@@ -1,0 +1,229 @@
+---
+title: "Data Application"
+author: "Elizabeth Chase"
+date: "3/15/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(HPR)
+library(mgcv)
+library(gamlss)
+library(kableExtra)
+
+bbt_data <- read_csv("~/Desktop/Research/Dissertation/Chapter_One/HPR_Sims/Data_application/menstruation_data2.csv")
+```
+
+Menstruating women:
+```{r hpr, echo = FALSE, message=FALSE, results = FALSE, fig.keep = 'all', cache = TRUE}
+bbt_data_author <- filter(bbt_data, Name == "Author") %>% dplyr::select(Day, Temperature)
+
+dat <- bbt_data_author[complete.cases(bbt_data_author),]
+pointdat <- dat
+pointdat$Subject <- "A"
+X <- as.matrix(dat$Day, ncol = 1)
+y <- dat$Temperature
+
+uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
+curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HPR"
+curve_estim1$Subject <- "A"
+  
+uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
+gp_fit_lin <- predict(uni_gpr1, newdata = dat, se.fit = TRUE)
+
+mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit, "Upper" = gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits$Model <- "GPR"
+mycurvefits$Subject <- "A"
+
+mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Pspline"
+mycurvefits2$Subject <- "A"
+
+fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2)
+
+bbt_data_blakeley <- filter(bbt_data, Name == "Blakeley") %>% dplyr::select(Day, Temperature)
+
+dat <- bbt_data_blakeley[complete.cases(bbt_data_blakeley),]
+dat$Subject <- "B"
+pointdat <- rbind(pointdat, dat)
+
+X <- as.matrix(dat$Day, ncol = 1)
+y <- dat$Temperature
+
+uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
+curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HPR"
+curve_estim1$Subject <- "B"
+  
+uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
+gp_fit_lin <- predict(uni_gpr1, newdata = dat, se.fit = TRUE)
+
+mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit, "Upper" = gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits$Model <- "GPR"
+mycurvefits$Subject <- "B"
+
+mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Pspline"
+mycurvefits2$Subject <- "B"
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+
+bbt_data_a4 <- filter(bbt_data, Name == "A4") %>% dplyr::select(Day, Temperature)
+
+dat <- bbt_data_a4[complete.cases(bbt_data_a4),]
+dat$Subject <- "C"
+pointdat <- rbind(pointdat, dat)
+
+X <- as.matrix(dat$Day, ncol = 1)
+y <- dat$Temperature
+
+uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
+curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HPR"
+curve_estim1$Subject <- "C"
+  
+uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
+gp_fit_lin <- predict(uni_gpr1, newdata = dat, se.fit = TRUE)
+
+mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit, "Upper" = gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits$Model <- "GPR"
+mycurvefits$Subject <- "C"
+
+mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Pspline"
+mycurvefits2$Subject <- "C"
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+
+bbt_data_carlie <- filter(bbt_data, Name == "Carlie") %>% dplyr::select(Day, Temperature)
+
+dat <- bbt_data_carlie[complete.cases(bbt_data_carlie),]
+dat$Subject <- "D"
+pointdat <- rbind(pointdat, dat)
+
+X <- as.matrix(dat$Day, ncol = 1)
+y <- dat$Temperature
+
+uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
+curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HPR"
+curve_estim1$Subject <- "D"
+  
+uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
+gp_fit_lin <- predict(uni_gpr1, newdata = dat, se.fit = TRUE)
+
+mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit, "Upper" = gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits$Model <- "GPR"
+mycurvefits$Subject <- "D"
+
+mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Pspline"
+mycurvefits2$Subject <- "D"
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+
+wh_estimates <- data.frame("Subject" = c("A", "B", "C", "D"), "Hypothesis" = c(24.5, NA, 16.5, 15.5))
+
+mens_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 2, scales = "free")
+
+ggsave("mens_plot.pdf", mens_plot)
+```
+
+```{r hpr2, echo = FALSE, message=FALSE, results = FALSE, fig.keep = 'all', cache = TRUE}
+bbt_data_maya <- filter(bbt_data, Name == "Maya") %>% dplyr::select(Day, Temperature)
+
+dat <- bbt_data_maya[complete.cases(bbt_data_maya),]
+dat$Subject <- "A"
+pointdat <- dat
+
+X <- as.matrix(dat$Day, ncol = 1)
+y <- dat$Temperature
+
+uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
+curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HPR"
+curve_estim1$Subject <- "A"
+  
+uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
+gp_fit_lin <- predict(uni_gpr1, newdata = dat, se.fit = TRUE)
+
+mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit, "Upper" = gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits$Model <- "GPR"
+mycurvefits$Subject <- "A"
+
+mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Pspline"
+mycurvefits2$Subject <- "A"
+
+fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2)
+
+bbt_data_amber <- filter(bbt_data, Name == "Amber") %>% dplyr::select(Day, Temperature)
+
+dat <- bbt_data_amber[complete.cases(bbt_data_amber),]
+dat$Subject <- "B"
+pointdat <- rbind(pointdat, dat)
+
+X <- as.matrix(dat$Day, ncol = 1)
+y <- dat$Temperature
+
+uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
+curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HPR"
+curve_estim1$Subject <- "B"
+  
+uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
+gp_fit_lin <- predict(uni_gpr1, newdata = dat, se.fit = TRUE)
+
+mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit, "Upper" = gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits$Model <- "GPR"
+mycurvefits$Subject <- "B"
+
+mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Pspline"
+mycurvefits2$Subject <- "B"
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+
+wh_estimates <- data.frame("Subject" = c("A", "B"), "Hypothesis" = c(15.5, 15.5))
+
+preg_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 1, scales = "free")
+
+ggsave("preg_plot.pdf", preg_plot, width = 6, height = 4)
+```
+
+```{r hpr2, echo = FALSE, message=FALSE, results = FALSE, fig.keep = 'all', cache = TRUE}
+bbt_data_tracy <- filter(bbt_data, Name == "Tracy") %>% dplyr::select(Day, Temperature, Aberration)
+
+dat <- bbt_data_tracy[complete.cases(bbt_data_tracy),]
+X <- as.matrix(dat$Day, ncol = 1)
+y <- dat$Temperature
+Z <- as.matrix(cbind(dat$Aberration), ncol = 1)
+
+uni_hpr1 <- hpr(y = y, X = X, Z = Z, family = "gaussian")
+curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HPR"
+mybetafits <- get_betas(uni_hpr1, alpha = 0.05)
+  
+fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "orange", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median-mybetafits$Median*(3/34), color = Model)) + geom_ribbon(aes(x = x, ymin = Lower-mybetafits$Median*(3/34), ymax = Upper-mybetafits$Median*(3/34), fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) 
+
+fever_plot
+
+ggsave("fever_plot.pdf", fever_plot, width = 4, height = 4)
+
+mybetafits
+```

@@ -13,7 +13,7 @@ library(mgcv)
 library(gamlss)
 library(kableExtra)
 
-rilt_data <- read_csv("~/Desktop/Research/Dissertation/Chapter One/lung_radiotherapy.csv")
+rilt_data <- read_csv("~/Desktop/Research/Dissertation/Chapter One/HPR_Sims/Data application/lung_radiotherapy.csv")
 ```
 
 ## Descriptives

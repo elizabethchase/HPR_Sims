@@ -12,65 +12,113 @@ library(cowplot)
 library(HPR)
 library(mgcv)
 library(gamlss)
+library(latex2exp)
+library(tibble)
 
-binomial_results <- read_csv("binomial_results.csv")
-binomial_aug_results <- read_csv("binomial_aug_results.csv")
-poisson_results <- read_csv("poisson_results.csv")
-poisson_aug_results <- read_csv("poisson_aug_results.csv")
-gaussian_results <- read_csv("gaussian_results.csv")
-gaussian_aug_results <- read_csv("gaussian_aug_results.csv")
-monotonic_results <- read_csv("monotonic_results.csv")
-plm_results <- read_csv("plm_results.csv")
+binomial_aug_results <- read_csv("Finished_Results/binomial_aug_results.csv")
+binomial_aug_results$simulate[binomial_aug_results$simulate=="smooth"] <- "bounce"
+poisson_aug_results <- read_csv("Finished_Results/poisson_aug_results.csv")
+poisson_aug_results$simulate[poisson_aug_results$simulate=="smooth"] <- "bounce"
+gaussian_aug_results <- read_csv("Finished_Results/gaussian_aug_results.csv")
+gaussian_aug_results$simulate[gaussian_aug_results$simulate=="smooth"] <- "bounce"
+monotonic_results <- read_csv("Finished_Results/monotonic_results.csv")
+plm_results <- read_csv("Finished_Results/plm_results.csv")
+pois_plm_results <- read_csv("Finished_Results/pois_plm_results.csv")
+bin_plm_results <- read_csv("Finished_Results/bin_plm_results.csv")
+
+load("Finished_Results/gaussian_results.RData")
+gaussian_results2 <- as_tibble(gaussian_results)
+gaussian_results2$simulate[gaussian_results2$simulate=="smooth"] <- "bounce"
+gaussian_pw_bias <- filter(gaussian_results2, score=="pointwise_bias") %>% unnest(score.metric)
+gaussian_pw_width <- filter(gaussian_results2, score=="pointwise_width") %>% unnest(score.metric)
+gaussian_pw_cover <- filter(gaussian_results2, score=="pointwise_cover") %>% unnest(score.metric)
+
+gaussian_results <- filter(gaussian_results2, score!="pointwise_bias", score!="pointwise_width", score!="pointwise_cover")
+gaussian_results <- unnest(gaussian_results, score.metric)
+
+load("Finished_Results/binomial_results.RData")
+binomial_results2 <- as_tibble(binomial_results)
+binomial_results2$simulate[binomial_results2$simulate=="smooth"] <- "bounce"
+binomial_pw_bias <- filter(binomial_results2, score=="pointwise_bias") %>% unnest(score.metric)
+binomial_pw_width <- filter(binomial_results2, score=="pointwise_width") %>% unnest(score.metric)
+binomial_pw_cover <- filter(binomial_results2, score=="pointwise_cover") %>% unnest(score.metric)
+
+binomial_results <- filter(binomial_results2, score!="pointwise_bias", score!="pointwise_width", score!="pointwise_cover")
+binomial_results <- unnest(binomial_results, score.metric)
+
+load("Finished_Results/poisson_results.RData")
+poisson_results2 <- as_tibble(poisson_results)
+poisson_results2$simulate[poisson_results2$simulate=="smooth"] <- "bounce"
+poisson_pw_bias <- filter(poisson_results2, score=="pointwise_bias") %>% unnest(score.metric)
+poisson_pw_width <- filter(poisson_results2, score=="pointwise_width") %>% unnest(score.metric)
+poisson_pw_cover <- filter(poisson_results2, score=="pointwise_cover") %>% unnest(score.metric)
+
+poisson_results <- filter(poisson_results2, score!="pointwise_bias", score!="pointwise_width", score!="pointwise_cover")
+poisson_results <- unnest(poisson_results, score.metric)
+
+rm(list = c("gaussian_results2", "binomial_results2", "poisson_results2"))
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+tri_col <- gg_color_hue(3)
 ```
 
 ## Binomial Results
 
 ```{r binomial_perf}
-mad_bin <- ggplot(data = filter(binomial_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + coord_cartesian(ylim = c(0, 0.3))
+binomial_results$analyze <- factor(binomial_results$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+binomial_pw_bias$analyze <- factor(binomial_pw_bias$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+binomial_pw_width$analyze <- factor(binomial_pw_width$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+binomial_pw_cover$analyze <- factor(binomial_pw_cover$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
-width_bin <- ggplot(data = filter(binomial_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank())
+mad_bin <- ggplot(data = filter(binomial_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) 
 
-cover_bin <- ggplot(data = filter(binomial_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + geom_hline(yintercept = 0.95, color = "red")
+width_bin <- ggplot(data = filter(binomial_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12))
+
+cover_bin <- ggplot(data = filter(binomial_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
-n <- 75
+n <- 150
 X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1)
 myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*6 + (x > 5 & x <= 6)*1 + (x > 6 & x <= 8)*3 + (x > 8)*10};
 y <- rbinom(n, prob = myfunc(X[,1])/10, size = 1);
 sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])/10, "y" = y, "simulate" = "bigstep")
 
 mymodel <- hpr(y = y, X = X, family = "binomial");
-mycurvefits <- get_f(mymodel, alpha = 0.05);
-mycurvefits$Model <- "HPR"
-mycurvefits$simulate <- "bigstep"
+mycurvefitsb <- get_f(mymodel, alpha = 0.05);
+mycurvefitsb$Model <- "HPR"
+mycurvefitsb$simulate <- "bigstep"
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "binomial");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bigstep", "Mean" = NA))
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bigstep", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
 preds <- predict(mymodel, se.fit = TRUE);
 
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
 
 myfunc <- function(x){abs(sin(x))}
 y <- rbinom(n, prob = myfunc(X[,1]), size = 1);
-sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "smooth"))
+sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bounce"))
 
 mymodel <- hpr(y = y, X = X, family = "binomial");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
-subdat$simulate <- "smooth"
-mycurvefits <- rbind(mycurvefits, subdat)
+subdat$simulate <- "bounce"
+mycurvefitsb <- rbind(mycurvefitsb, subdat)
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "binomial");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "smooth", "Mean" = NA))
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bounce", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
 preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "smooth", "Mean" = NA))
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bounce", "Mean" = NA))
 
 myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)}
 y <- rbinom(n, prob = myfunc(X[,1])/6, size = 1);
@@ -80,70 +128,94 @@ mymodel <- hpr(y = y, X = X, family = "binomial");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
 subdat$simulate <- "joinpoint"
-mycurvefits <- rbind(mycurvefits, subdat)
+mycurvefitsb <- rbind(mycurvefitsb, subdat)
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "binomial");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "joinpoint", "Mean" = NA))
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "joinpoint", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
 preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
 
-sample_plot <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y)) + geom_line(data = sim_data,aes(x = x, y = truth)) + facet_wrap(~simulate, nrow = 1) + theme_bw() + theme(legend.position = "top") + ylab("y")
+mycurvefitsb$Model <- factor(mycurvefitsb$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
-bin_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4)
-ggsave("bin_perf.pdf", bin_perf, width = 8, height = 12)
+sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefitsb, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefitsb, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
+
+bin_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4, align = "v")
+ggsave("Finished_Plots/bin_perf.pdf", bin_perf, width = 8, height = 12)
+```
+
+```{r binomial_pw}
+pw_bias <- group_by(binomial_pw_bias, simulate, analyze, x) %>% summarize(bias = mean(bias))
+pw_width <- group_by(binomial_pw_width, simulate, analyze, x) %>% summarize(width = mean(width))
+pw_cover <- group_by(binomial_pw_cover, simulate, analyze, x) %>% summarize(cover = mean(cover))
+
+mad_bin2 <- ggplot(data = pw_bias) + geom_line(aes(x = x, y = bias, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Bias") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + scale_color_manual(values = c("gray", "gray", "blue"))
+
+cover_bin2 <-  ggplot(data = pw_cover) + geom_line(aes(x = x, y = cover, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("95% Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + geom_hline(yintercept = 0.95, color = "red") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "blue"))
+
+width_bin2 <-  ggplot(data = pw_width) + geom_line(aes(x = x, y = width, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean 95% Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "blue"))
+
+sample_plot2 <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") 
+
+bin_perf2 <- plot_grid(sample_plot2, mad_bin2, width_bin2, cover_bin2, nrow = 4, align = "v")
+ggsave("Finished_Plots/bin_pw_perf.pdf", bin_perf2, width = 8, height = 12)
 ```
 
 ## Poisson Results
 
 ```{r poisson_perf}
-mad_bin <- ggplot(data = filter(poisson_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + coord_cartesian(ylim = c(0, 1.5))
+poisson_results$analyze <- factor(poisson_results$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+poisson_pw_bias$analyze <- factor(poisson_pw_bias$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+poisson_pw_width$analyze <- factor(poisson_pw_width$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+poisson_pw_cover$analyze <- factor(poisson_pw_cover$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
-width_bin <- ggplot(data = filter(poisson_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + coord_cartesian(ylim = c(1, 8))
+mad_bin <- ggplot(data = filter(poisson_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) 
 
-cover_bin <- ggplot(data = filter(poisson_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank()) + geom_hline(yintercept = 0.95, color = "red")
+width_bin <- ggplot(data = filter(poisson_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) 
+
+cover_bin <- ggplot(data = filter(poisson_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
-n <- 75
+n <- 100
 X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1)
 myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*6 + (x > 5 & x <= 6)*1 + (x > 6 & x <= 8)*3 + (x > 8)*10};
 y <- rpois(n, lambda = myfunc(X[,1]));
 sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bigstep")
 
 mymodel <- hpr(y = y, X = X, family = "poisson");
-mycurvefits <- get_f(mymodel, alpha = 0.05);
-mycurvefits$Model <- "HPR"
-mycurvefits$simulate <- "bigstep"
+mycurvefitsp <- get_f(mymodel, alpha = 0.05);
+mycurvefitsp$Model <- "HPR"
+mycurvefitsp$simulate <- "bigstep"
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "poisson");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bigstep", "Mean" = NA))
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bigstep", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
 preds <- predict(mymodel, se.fit = TRUE);
 
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
 
 myfunc <- function(x){abs(sin(x))}
 y <- rpois(n, lambda = myfunc(X[,1])*10);
-sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1])*10, "y" = y, "simulate" = "smooth"))
+sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1])*10, "y" = y, "simulate" = "bounce"))
 
 mymodel <- hpr(y = y, X = X, family = "poisson");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
-subdat$simulate <- "smooth"
-mycurvefits <- rbind(mycurvefits, subdat)
+subdat$simulate <- "bounce"
+mycurvefitsp <- rbind(mycurvefitsp, subdat)
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "poisson");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "smooth", "Mean" = NA))
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bounce", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
 preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "smooth", "Mean" = NA))
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bounce", "Mean" = NA))
 
 myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)};
 y <- rpois(n, lambda = myfunc(X[,1]))
@@ -153,33 +225,56 @@ mymodel <- hpr(y = y, X = X, family = "poisson");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
 subdat$simulate <- "joinpoint"
-mycurvefits <- rbind(mycurvefits, subdat)
+mycurvefitsp <- rbind(mycurvefitsp, subdat)
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "poisson");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "joinpoint", "Mean" = NA))
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "joinpoint", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
 preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
 
-sample_plot <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y)) + geom_line(data = sim_data,aes(x = x, y = truth)) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top") + ylab("y")
+mycurvefitsp$Model <- factor(mycurvefitsp$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
-pois_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4)
-ggsave("pois_perf.pdf", pois_perf, width = 8, height = 12)
+sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefitsp, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefitsp, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
+
+pois_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4, align = "v")
+ggsave("Finished_Plots/pois_perf.pdf", pois_perf, width = 8, height = 12)
+```
+
+```{r poisson_pw}
+pw_bias <- group_by(poisson_pw_bias, simulate, analyze, x) %>% summarize(bias = mean(bias))
+pw_width <- group_by(poisson_pw_width, simulate, analyze, x) %>% summarize(width = mean(width))
+pw_cover <- group_by(poisson_pw_cover, simulate, analyze, x) %>% summarize(cover = mean(cover))
+
+mad_bin2 <- ggplot(data = pw_bias) + geom_line(aes(x = x, y = bias, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Bias") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + scale_color_manual(values = c("gray", "gray", "blue"))
+
+cover_bin2 <-  ggplot(data = pw_cover) + geom_line(aes(x = x, y = cover, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("95% Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + geom_hline(yintercept = 0.95, color = "red") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "blue"))
+
+width_bin2 <-  ggplot(data = pw_width) + geom_line(aes(x = x, y = width, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean 95% Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "blue"))
+
+sample_plot2 <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") 
+
+pois_perf <- plot_grid(sample_plot2, mad_bin2, width_bin2, cover_bin2, nrow = 4, align = "v")
+ggsave("Finished_Plots/pois_pw_perf.pdf", pois_perf, width = 8, height = 12)
 ```
 
 ## Gaussian Results
 
 ```{r gaussian_perf}
-mad_bin <- ggplot(data = filter(gaussian_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + coord_cartesian(ylim = c(0,1))
+gaussian_pw_bias$analyze <- factor(gaussian_pw_bias$analyze, levels = c("Pspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
+gaussian_pw_width$analyze <- factor(gaussian_pw_width$analyze, levels = c("Pspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
+gaussian_pw_cover$analyze <- factor(gaussian_pw_cover$analyze, levels = c("Pspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
 
-width_bin <- ggplot(data = filter(gaussian_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+mad_bin <- ggplot(data = filter(gaussian_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
 
-cover_bin <- ggplot(data = filter(gaussian_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + geom_hline(yintercept = 0.95, color = "red")
+width_bin <- ggplot(data = filter(gaussian_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12))
+
+cover_bin <- ggplot(data = filter(gaussian_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
-n <- 75
+n <- 100
 sd <- 0.5
 X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1)
 myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*6 + (x > 5 & x <= 6)*1 + (x > 6 & x <= 8)*3 + (x > 8)*10};
@@ -201,24 +296,26 @@ preds <- predict(mymodel, se.fit = TRUE);
 
 mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
 
+sd <- 0.2
 myfunc <- function(x){abs(sin(x))}
 y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
-sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "smooth"))
+sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bounce"))
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
-subdat$simulate <- "smooth"
+subdat$simulate <- "bounce"
 mycurvefits <- rbind(mycurvefits, subdat)
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"));
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (gp_fit_lin$fit), "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "smooth", "Mean" = NA))
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = (gp_fit_lin$fit), "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bounce", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
 preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "smooth", "Mean" = NA))
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bounce", "Mean" = NA))
 
+sd <- 0.5
 myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)};
 y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "joinpoint"))
@@ -255,14 +352,33 @@ mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
 preds <- predict(mymodel, se.fit = TRUE);
 mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "smallstep", "Mean" = NA))
 
-sample_plot <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y)) + geom_line(data = sim_data,aes(x = x, y = truth)) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top") + ylab("y")
+mycurvefits$Model <- factor(mycurvefits$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
-gaus_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4)
-ggsave("gaus_perf.pdf", gaus_perf, width = 8, height = 12)
+sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
 
-sample_plot2 <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y)) + geom_line(data = sim_data,aes(x = x, y = truth)) + facet_wrap(~simulate, nrow = 2, scales = "free_y") + theme_bw() + theme(legend.position = "bottom") + ylab("y")
+gaus_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4, align = "v")
+ggsave("Finished_Plots/gaus_perf.pdf", gaus_perf, width = 8, height = 12)
 
-ggsave("samplefits.pdf", sample_plot2, width = 8, height = 10)
+sample_plot2 <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y)) + geom_line(data = sim_data,aes(x = x, y = truth)) + facet_wrap(~simulate, nrow = 2, scales = "free_y") + theme_bw() + theme(legend.position = "bottom", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = quint_col) + scale_fill_manual(values = quint_col)
+
+ggsave("Finished_Plots/samplefits.pdf", sample_plot2, width = 8, height = 10)
+```
+
+```{r binomial_pw}
+pw_bias <- group_by(gaussian_pw_bias, simulate, analyze, x) %>% summarize(bias = mean(bias))
+pw_width <- group_by(gaussian_pw_width, simulate, analyze, x) %>% summarize(width = mean(width))
+pw_cover <- group_by(gaussian_pw_cover, simulate, analyze, x) %>% summarize(cover = mean(cover))
+
+sample_plot2 <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "none", text=element_text(size=12)) + ylab("y") 
+
+mad_bin2 <- ggplot(data = pw_bias) + geom_line(aes(x = x, y = bias, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Bias") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + scale_color_manual(values = c("gray", "gray", "gray", "gray", "blue"))
+
+cover_bin2 <-  ggplot(data = pw_cover) + geom_line(aes(x = x, y = cover, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("95% Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + geom_hline(yintercept = 0.95, color = "red") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "gray", "gray", "blue"))
+
+width_bin2 <-  ggplot(data = pw_width) + geom_line(aes(x = x, y = width, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean 95% Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "gray", "gray", "blue"))
+
+gaus_perf2 <- plot_grid(sample_plot2, mad_bin2, width_bin2, cover_bin2, nrow = 4, align = "v")
+ggsave("Finished_Plots/gaus_pw_perf.pdf", gaus_perf2, width = 8, height = 12)
 ```
 
 ## Computational Results
@@ -271,37 +387,36 @@ ggsave("samplefits.pdf", sample_plot2, width = 8, height = 10)
 gaussian_results$Outcome <- "Gaussian"
 binomial_results$Outcome <- "Binomial"
 poisson_results$Outcome <- "Poisson"
-plm_results$Outcome <- "Gaussian PLM"
 
-many_sims <- rbind(gaussian_results, binomial_results, poisson_results, plm_results)
+many_sims <- rbind(gaussian_results, binomial_results, poisson_results)
 
-div_plot <- ggplot(data = filter(many_sims, score=="div", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Proportion of Samples \nwith Divergences")
+div_plot <- ggplot(data = filter(many_sims, score=="div", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nwith Divergences")
 
-time_plot <- ggplot(data = filter(many_sims, score=="time", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + xlab("") + ylab("Computing Time \n(seconds)")
+time_plot <- ggplot(data = filter(many_sims, score=="time", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + xlab("") + ylab("Computing Time \n(seconds)")
 
-rhat_plot <- ggplot(data = filter(many_sims, score=="rhat", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Proportion of Parameters \nwith Rhat > 1.1")
+rhat_plot <- ggplot(data = filter(many_sims, score=="rhat", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Parameters \nwith Rhat > 1.1")
 
-bulk_plot <- ggplot(data = filter(many_sims, score=="min_samp_bulk", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Min. Bulk \nEff. Samples")
+bulk_plot <- ggplot(data = filter(many_sims, score=="min_samp_bulk", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Bulk \nEff. Samples")
 
-tail_plot <- ggplot(data = filter(many_sims, score=="min_samp_tail", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Min. Tail \nEff. Samples")
+tail_plot <- ggplot(data = filter(many_sims, score=="min_samp_tail", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Tail \nEff. Samples")
 
-tree_plot <- ggplot(data = filter(many_sims, score=="treedepth", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Proportion of Samples \nHit Max. Treedepth")
+tree_plot <- ggplot(data = filter(many_sims, score=="treedepth", simulate != "smallstep")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nHit Max. Treedepth")
 
-comp_plot <- plot_grid(div_plot, tree_plot, rhat_plot, bulk_plot, tail_plot, time_plot, nrow = 6)
-ggsave("comp_perf.pdf", comp_plot, width = 8, height = 12)
+comp_plot <- plot_grid(div_plot, tree_plot, rhat_plot, bulk_plot, tail_plot, time_plot, nrow = 6, align = "v")
+ggsave("Finished_Plots/comp_perf.pdf", comp_plot, width = 8, height = 12)
 ```
 
 ## Monotonic Results
 
 ```{r monotonic}
-mad_bin <- ggplot(data = filter(monotonic_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + coord_cartesian(ylim = c(0, 0.6))
+mad_bin <- ggplot(data = filter(monotonic_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
 
-width_bin <- ggplot(data = filter(monotonic_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) 
+width_bin <- ggplot(data = filter(monotonic_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
 
-cover_bin <- ggplot(data = filter(monotonic_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + geom_hline(yintercept = 0.95, color = "red")
+cover_bin <- ggplot(data = filter(monotonic_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
 
 #Creating sample datasets and sample performance:
-n <- 75
+n <- 100
 X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1)
 sd <- 0.5
 myfunc <- function(x){qlogis((x/11) + 0.01)};
@@ -309,86 +424,86 @@ y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "smooth")
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
-mycurvefits <- get_f(mymodel, alpha = 0.05);
-mycurvefits$Model <- "HPR"
-mycurvefits$simulate <- "smooth"
+mycurvefitsm <- get_f(mymodel, alpha = 0.05);
+mycurvefitsm$Model <- "HPR"
+mycurvefitsm$simulate <- "smooth"
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "exp");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_exp"
 subdat$simulate <- "smooth"
-mycurvefits <- rbind(mycurvefits, subdat)
+mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "abs");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_abs"
 subdat$simulate <- "smooth"
-mycurvefits <- rbind(mycurvefits, subdat)
+mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 sd <- 1
 myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*6 + (x > 5 & x <= 6)*10 + (x > 6 & x <= 8)*12 + (x > 8)*20};
 y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
-sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bigstep")
+sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bigstep"))
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
 subdat$simulate <- "bigstep"
-mycurvefits <- rbind(mycurvefits, subdat)
+mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "exp");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_exp"
 subdat$simulate <- "bigstep"
-mycurvefits <- rbind(mycurvefits, subdat)
+mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "abs");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_abs"
 subdat$simulate <- "bigstep"
-mycurvefits <- rbind(mycurvefits, subdat)
+mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
-sample_plot <- ggplot() + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y)) + geom_line(data = sim_data,aes(x = x, y = truth)) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top") + ylab("y")
+sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefitsm, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefitsm, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y")
 
-mono_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4)
-ggsave("mono_perf.pdf", mono_perf, width = 8, height = 12)
+mono_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4, align = "v")
+ggsave("Finished_Plots/mono_perf.pdf", mono_perf, width = 8, height = 12)
 ```
 
 ```{r monotonic_comp}
-mono_div <- ggplot(data = filter(monotonic_results, score=="div")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme_bw() + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Proportion of Samples \nwith Divergences")
+mono_div <- ggplot(data = filter(monotonic_results, score=="div")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme_bw() + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nwith Divergences")
 
-mono_time <- ggplot(data = filter(monotonic_results, score=="time")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + xlab("") + ylab("Computing Time \n(seconds)")
+mono_time <- ggplot(data = filter(monotonic_results, score=="time")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + xlab("") + ylab("Computing Time \n(seconds)")
 
-mono_rhat <- ggplot(data = filter(monotonic_results, score=="rhat")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Proportion of Parameters \nwith Rhat > 1.1")
+mono_rhat <- ggplot(data = filter(monotonic_results, score=="rhat")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Parameters \nwith Rhat > 1.1")
 
-mono_bulk <- ggplot(data = filter(monotonic_results, score=="min_samp_bulk")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Min. Bulk \nEff. Samples")
+mono_bulk <- ggplot(data = filter(monotonic_results, score=="min_samp_bulk")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Bulk \nEff. Samples")
 
-mono_tail <- ggplot(data = filter(monotonic_results, score=="min_samp_tail")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Min. Tail \nEff. Samples")
+mono_tail <- ggplot(data = filter(monotonic_results, score=="min_samp_tail")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Tail \nEff. Samples")
 
-mono_tree <- ggplot(data = filter(monotonic_results, score=="treedepth")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + xlab("") + ylab("Proportion of Samples \nHit Max. Treedepth")
+mono_tree <- ggplot(data = filter(monotonic_results, score=="treedepth")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nHit Max. Treedepth")
 
-mono_comp <- plot_grid(mono_div, mono_tree, mono_rhat, mono_bulk, mono_tail, mono_time, nrow = 6)
-ggsave("mono_comp.pdf", mono_comp, width = 8, height = 12)
+mono_comp <- plot_grid(mono_div, mono_tree, mono_rhat, mono_bulk, mono_tail, mono_time, nrow = 6, align = "v")
+ggsave("Finished_Plots/mono_comp.pdf", mono_comp, width = 8, height = 12)
 ```
 
 ## PLM Results
 ```{r plm}
-mad_bin <- ggplot(data = filter(plm_results, score=="mad_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(axis.text.x = element_text(angle = 90)) + coord_cartesian(ylim = c(0, 0.6))
+mad_bin <- ggplot(data = filter(plm_results, score=="pred_diff")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
 
-width_bin <- ggplot(data = filter(plm_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) 
+cover_bin <- ggplot(data = filter(plm_results, score=="pred_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
 
-cover_bin <- ggplot(data = filter(plm_results, score=="cover_adj")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90)) + geom_hline(yintercept = 0.95, color = "red")
+width_bin <- ggplot(data = filter(plm_results, score=="pred_width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
 
-plm_traj <- plot_grid(mad_bin, width_bin, cover_bin, nrow = 3)
-ggsave("plm_traj.pdf", plm_traj, width = 8, height = 10)
+plm_traj <- plot_grid(mad_bin, width_bin, cover_bin, nrow = 3, align = "v")
+ggsave("Finished_Plots/plm_preds.pdf", plm_traj, width = 8, height = 10)
 
-beta1_bias <- ggplot(data = filter(plm_results, score=="beta1_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Bias of Beta 1") + theme(axis.text.x = element_text(angle = 90))
+beta1_bias <- ggplot(data = filter(plm_results, score=="beta1_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\beta_1$' )) + theme(axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=0.05, color = "red")
 
-beta2_bias <- ggplot(data = filter(plm_results, score=="beta2_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Bias of Beta 2") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+beta2_bias <- ggplot(data = filter(plm_results, score=="beta2_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\beta_2$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=0.1, color = "red")
 
-beta3_bias <- ggplot(data = filter(plm_results, score=="beta3_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Bias of Beta 3") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+beta3_bias <- ggplot(data = filter(plm_results, score=="beta3_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\beta_3$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=5, color = "red")
 
-beta4_bias <- ggplot(data = filter(plm_results, score=="beta4_bias")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Bias of Beta 4") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90))
+beta4_bias <- ggplot(data = filter(plm_results, score=="beta4_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\beta_4$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=0, color = "red")
 
 beta_set <- filter(plm_results, grepl("beta", score))
 beta_set$Beta <- case_when(
@@ -400,20 +515,120 @@ beta_set$Beta <- case_when(
 
 beta_agg <- filter(beta_set, grepl("cover", score)) %>% group_by(Beta, analyze, simulate) %>% summarize(coverage = mean(score.metric))
 
-gg_color_hue <- function(n) {
-  hues = seq(15, 375, length = n + 1)
-  hcl(h = hues, l = 65, c = 100)[1:n]
-}
-
-n = 3
-cols = gg_color_hue(n)
-
 beta_agg$coverage[beta_agg$Beta=="beta1" & beta_agg$simulate=="bigstep" & beta_agg$analyze=="Pspline"] <- beta_agg$coverage[beta_agg$Beta=="beta1" & beta_agg$simulate=="bigstep" & beta_agg$analyze=="Pspline"] - 0.002
 
-beta_cover <- ggplot(data = beta_agg) + geom_point(aes(x = Beta, y = coverage, color = analyze)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom") + scale_color_manual(name = "Method", values = cols) + geom_hline(yintercept = 0.95, color = "red")
+beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+beta_cover <- ggplot(data = beta_agg) + geom_jitter(aes(x = Beta, y = coverage, shape = analyze), width = 0.1) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom", text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red") + labs(shape = "Model") +
+  scale_x_discrete(labels=c('beta1'=parse(text = TeX('$\\beta_1$')),
+                            'beta2'=parse(text = TeX('$\\beta_2$')),
+                            'beta3'=parse(text = TeX('$\\beta_3$')),
+                            'beta4'=parse(text = TeX('$\\beta_4$'))))
 
-plm_betas <- plot_grid(beta1_bias, beta2_bias, beta3_bias, beta4_bias, beta_cover, nrow = 5)
-ggsave("plm_betas.pdf", plm_betas, width = 8, height = 12)
+plm_betas <- plot_grid(beta1_bias, beta2_bias, beta3_bias, beta4_bias, beta_cover, nrow = 5, align = "v")
+ggsave("Finished_Plots/plm_betas.pdf", plm_betas, width = 8, height = 12)
+```
+
+```{r pois_plm}
+mad_bin <- ggplot(data = filter(pois_plm_results, score=="pred_diff")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
+
+cover_bin <- ggplot(data = filter(pois_plm_results, score=="pred_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red") 
+
+width_bin <- ggplot(data = filter(pois_plm_results, score=="pred_width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + coord_cartesian(ylim = c(0, 15))
+
+plm_traj <- plot_grid(mad_bin, width_bin, cover_bin, nrow = 3, align = "v")
+ggsave("Finished_Plots/pois_plm_preds.pdf", plm_traj, width = 8, height = 10)
+
+beta1_bias <- ggplot(data = filter(pois_plm_results, score=="beta1_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_1)$' )) + theme(axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=exp(0.01), color = "red")
+
+beta2_bias <- ggplot(data = filter(pois_plm_results, score=="beta2_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_2)$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=exp(0.01), color = "red")
+
+beta3_bias <- ggplot(data = filter(pois_plm_results, score=="beta3_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_3)$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=exp(0.08), color = "red")
+
+beta4_bias <- ggplot(data = filter(pois_plm_results, score=="beta4_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_4)$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=1, color = "red")
+
+beta_set <- filter(pois_plm_results, grepl("beta", score))
+beta_set$Beta <- case_when(
+  grepl("beta1", beta_set$score) ~ "beta1",
+  grepl("beta2", beta_set$score) ~ "beta2",
+  grepl("beta3", beta_set$score) ~ "beta3",
+  grepl("beta4", beta_set$score) ~ "beta4",
+)
+
+beta_agg <- filter(beta_set, grepl("cover", score)) %>% group_by(Beta, analyze, simulate) %>% summarize(coverage = mean(score.metric))
+
+beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+
+beta_cover <- ggplot(data = beta_agg) + geom_jitter(aes(x = Beta, y = coverage, shape = analyze), width = 0.1) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom", text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red") + labs(shape = "Model")  + 
+  scale_x_discrete(labels=c('beta1'=parse(text = TeX('$\\beta_1$')),
+                            'beta2'=parse(text = TeX('$\\beta_2$')),
+                            'beta3'=parse(text = TeX('$\\beta_3$')),
+                            'beta4'=parse(text = TeX('$\\beta_4$'))))
+
+plm_betas <- plot_grid(beta1_bias, beta2_bias, beta3_bias, beta4_bias, beta_cover, nrow = 5, align = "v")
+ggsave("Finished_Plots/pois_plm_betas.pdf", plm_betas, width = 8, height = 12)
+```
+
+```{r bin_plm}
+mad_bin <- ggplot(data = filter(bin_plm_results, score=="pred_diff")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
+
+cover_bin <- ggplot(data = filter(bin_plm_results, score=="pred_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
+
+width_bin <- ggplot(data = filter(bin_plm_results, score=="pred_width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
+
+plm_traj <- plot_grid(mad_bin, width_bin, cover_bin, nrow = 3, align = "v")
+ggsave("Finished_Plots/bin_plm_preds.pdf", plm_traj, width = 8, height = 10)
+
+beta1_bias <- ggplot(data = filter(bin_plm_results, score=="beta1_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_1)$' )) + theme(axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=exp(-0.05), color = "red")
+
+beta2_bias <- ggplot(data = filter(bin_plm_results, score=="beta2_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_2)$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=exp(0.1), color = "red")
+
+beta3_bias <- ggplot(data = filter(bin_plm_results, score=="beta3_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_3)$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=exp(-0.5), color = "red")
+
+beta4_bias <- ggplot(data = filter(bin_plm_results, score=="beta4_value")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab(TeX('Estimate of $\\exp(\\beta_4)$' )) + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept=1, color = "red")
+
+beta_set <- filter(bin_plm_results, grepl("beta", score))
+beta_set$Beta <- case_when(
+  grepl("beta1", beta_set$score) ~ "beta1",
+  grepl("beta2", beta_set$score) ~ "beta2",
+  grepl("beta3", beta_set$score) ~ "beta3",
+  grepl("beta4", beta_set$score) ~ "beta4",
+)
+
+beta_agg <- filter(beta_set, grepl("cover", score)) %>% group_by(Beta, analyze, simulate) %>% summarize(coverage = mean(score.metric))
+
+beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+
+beta_cover <- ggplot(data = beta_agg) + geom_jitter(aes(x = Beta, y = coverage, shape = analyze), width = 0.1) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom", text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")  + labs(shape = "Model") +
+  scale_x_discrete(labels=c('beta1'=parse(text = TeX('$\\beta_1$')), 
+                            'beta2'=parse(text = TeX('$\\beta_2$')),
+                            'beta3'=parse(text = TeX('$\\beta_3$')),
+                            'beta4'=parse(text = TeX('$\\beta_4$'))))
+
+plm_betas <- plot_grid(beta1_bias, beta2_bias, beta3_bias, beta4_bias, beta_cover, nrow = 5, align = "v")
+ggsave("Finished_Plots/bin_plm_betas.pdf", plm_betas, width = 8, height = 12)
+```
+
+```{r comp_perf_plm}
+plm_results$Outcome <- "Gaussian PLM"
+bin_plm_results$Outcome <- "Binomial PLM"
+pois_plm_results$Outcome <- "Poisson PLM"
+
+many_sims <- rbind(plm_results, bin_plm_results, pois_plm_results)
+
+div_plot <- ggplot(data = filter(many_sims, score=="div")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nwith Divergences")
+
+time_plot <- ggplot(data = filter(many_sims, score=="time")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + xlab("") + ylab("Computing Time \n(seconds)")
+
+rhat_plot <- ggplot(data = filter(many_sims, score=="rhat")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Parameters \nwith Rhat > 1.1")
+
+bulk_plot <- ggplot(data = filter(many_sims, score=="min_samp_bulk")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Bulk \nEff. Samples")
+
+tail_plot <- ggplot(data = filter(many_sims, score=="min_samp_tail")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Tail \nEff. Samples")
+
+tree_plot <- ggplot(data = filter(many_sims, score=="treedepth")) + geom_boxplot(aes(x = Outcome, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nHit Max. Treedepth")
+
+comp_plot <- plot_grid(div_plot, tree_plot, rhat_plot, bulk_plot, tail_plot, time_plot, nrow = 6, align = "v")
+ggsave("Finished_Plots/plm_comp_perf.pdf", comp_plot, width = 8, height = 12)
 ```
 
 ## Augmentation Results
@@ -422,45 +637,68 @@ Gaussian:
 ```{r gaussian_aug_perf}
 gaussian_aug_results$analyze <- factor(gaussian_aug_results$analyze, levels = c("HPR_obs", "HPR_five", "HPR_one"), labels = c("Observed", "0.5", "0.1"), ordered = TRUE)
 
-mad_obs <- ggplot(data = filter(gaussian_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top") + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points"))
+mad_obs <- ggplot(data = filter(gaussian_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top", text=element_text(size=12)) + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points"))
 
-width_obs <- ggplot(data = filter(gaussian_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74"))
+width_obs <- ggplot(data = filter(gaussian_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74"))
 
-cover_obs <- ggplot(data = filter(gaussian_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
+cover_obs <- ggplot(data = filter(gaussian_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
 
-
-gaus_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3)
-ggsave("gaus_aug_perf.pdf", gaus_aug_perf, width = 8, height = 14)
+gaus_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3, align = "v")
+ggsave("Finished_Plots/gaus_aug_perf.pdf", gaus_aug_perf, width = 8, height = 14)
 ```
 
 Binomial:
 ```{r binomial_aug_perf}
 binomial_aug_results$analyze <- factor(binomial_aug_results$analyze, levels = c("HPR_obs", "HPR_five", "HPR_one"), labels = c("Observed", "0.5", "0.1"), ordered = TRUE)
 
-mad_obs <- ggplot(data = filter(binomial_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top") + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points")) + coord_cartesian(ylim = c(0, 0.35))
+mad_obs <- ggplot(data = filter(binomial_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top", text=element_text(size=12)) + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points")) 
 
-width_obs <- ggplot(data = filter(binomial_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74"))
+width_obs <- ggplot(data = filter(binomial_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74"))
 
-cover_obs <- ggplot(data = filter(binomial_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
+cover_obs <- ggplot(data = filter(binomial_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
 
-
-bin_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3)
-ggsave("bin_aug_perf.pdf", bin_aug_perf, width = 8, height = 14)
+bin_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3, align = "v")
+ggsave("Finished_Plots/bin_aug_perf.pdf", bin_aug_perf, width = 8, height = 14)
 ```
 
 Poisson:
 ```{r poisson_aug_perf}
 poisson_aug_results$analyze <- factor(poisson_aug_results$analyze, levels = c("HPR_obs", "HPR_five", "HPR_one"), labels = c("Observed", "0.5", "0.1"), ordered = TRUE)
 
-mad_obs <- ggplot(data = filter(poisson_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top") + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points")) + coord_cartesian(ylim = c(0, 3))
+mad_obs <- ggplot(data = filter(poisson_aug_results, score=="mad_obs" | score=="mad_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(legend.position = "top", text=element_text(size=12)) + scale_fill_manual(name = "", values = c("mediumpurple4", "grey74"), labels = c("Augmented Points", "Observed Points"))
 
-width_obs <- ggplot(data = filter(poisson_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + coord_cartesian(ylim = c(2.5, 25)) + scale_fill_manual(values = c("mediumpurple4", "grey74"))
+width_obs <- ggplot(data = filter(poisson_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74"))
 
-cover_obs <- ggplot(data = filter(poisson_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1) + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none") + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
+cover_obs <- ggplot(data = filter(poisson_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
 
+pois_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3, align = "v")
+ggsave("Finished_Plots/pois_aug_perf.pdf", pois_aug_perf, width = 8, height = 14)
+```
 
-pois_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3)
-ggsave("pois_aug_perf.pdf", pois_aug_perf, width = 8, height = 14)
+Computational assessment:
+```{r comp_perf_plm}
+gaussian_aug_results$Outcome <- "Gaussian"
+binomial_aug_results$Outcome <- "Binomial"
+poisson_aug_results$Outcome <- "Poisson"
+
+many_sims <- rbind(gaussian_aug_results, binomial_aug_results, poisson_aug_results)
+
+div_plot <- ggplot(data = filter(many_sims, score=="div")) + geom_boxplot(aes(x = Outcome, y = score.metric, fill = analyze)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nwith Divergences") + theme(legend.position = "top") + guides(fill=guide_legend(title=""))
+
+time_plot <- ggplot(data = filter(many_sims, score=="time")) + geom_boxplot(aes(x = Outcome, y = score.metric, fill = analyze)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + xlab("") + ylab("Computing Time \n(seconds)") + theme(legend.position = "none") 
+
+rhat_plot <- ggplot(data = filter(many_sims, score=="rhat")) + geom_boxplot(aes(x = Outcome, y = score.metric, fill = analyze)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Parameters \nwith Rhat > 1.1") + theme(legend.position = "none")
+
+bulk_plot <- ggplot(data = filter(many_sims, score=="min_samp_bulk")) + geom_boxplot(aes(x = Outcome, y = score.metric, fill = analyze)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Bulk \nEff. Samples") + theme(legend.position = "none")
+
+tail_plot <- ggplot(data = filter(many_sims, score=="min_samp_tail")) + geom_boxplot(aes(x = Outcome, y = score.metric, fill = analyze)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Min. Tail \nEff. Samples") + theme(legend.position = "none")
+
+tree_plot <- ggplot(data = filter(many_sims, score=="treedepth")) + geom_boxplot(aes(x = Outcome, y = score.metric, fill = analyze)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), text=element_text(size=12)) + xlab("") + ylab("Proportion of Samples \nHit Max. Treedepth") + theme(legend.position = "none")
+
+comp_plot <- plot_grid(div_plot, tree_plot, rhat_plot, bulk_plot, tail_plot, time_plot, nrow = 6, align = "v")
+
+comp_plot
+ggsave("Finished_Plots/aug_comp_perf.pdf", comp_plot, width = 8, height = 12)
 ```
 
 Implied prior:
@@ -474,7 +712,18 @@ h <- rnorm(length(x)-1, 0, 1)
 inc <- lambda*tau*h*delta
 hpr <- cumsum(c(0, inc))
 
-mydat <- data.frame("x" = x, "y" = hpr)
+mydat <- data.frame("x" = x, "y" = hpr, "group" = 1)
 
-ggplot(data = mydat) + geom_line(aes(x = x, y = y)) + theme_bw()
+for (i in 2:4){
+  lambda <- rcauchy(length(x)-1, 0, 1)
+  tau <- rcauchy(1, 0, 1)
+  h <- rnorm(length(x)-1, 0, 1)
+  inc <- lambda*tau*h*delta
+  hpr <- cumsum(c(0, inc))
+  mydat <- rbind(mydat, data.frame("x" = x, "y" = hpr, "group" = i))
+}
+
+samp_plot <- ggplot(data = mydat) + geom_line(aes(x = x, y = y)) + theme_bw() + facet_wrap(~factor(group), scales = "free_y", nrow = 2) + theme(text=element_text(size=12))
+
+ggsave("Finished_Plots/samp_trajs.pdf", samp_plot, width = 8, height = 8)
 ```
