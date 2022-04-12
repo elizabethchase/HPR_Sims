@@ -11,7 +11,7 @@ smooth: R(  X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
             myfunc <- function(x){abs(sin(x))};
             y <- rbinom(n, prob = myfunc(X[,1]), size = 1);
             true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 150
+  n: 149
   $preds: X
   $outcome: y
   $truth: true_curve
