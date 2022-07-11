@@ -11,7 +11,7 @@ smooth: R(  X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
             myfunc <- function(x){abs(sin(x))};
             y <- rbinom(n, prob = myfunc(X[,1]), size = 1);
             true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
-  n: 150
+  n: 149
   $preds: X
   $outcome: y
   $truth: true_curve
@@ -20,6 +20,24 @@ joinpoint: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
               myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)};
               y <- rbinom(n, prob = myfunc(X[,1])/6, size = 1);
               true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])/6))
+  n: 150
+  $preds: X
+  $outcome: y
+  $truth: true_curve
+  
+lineflat: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
+            myfunc <- function(x){(x <= 3)*x + (x > 3)*3};
+            y <- rbinom(n, prob = myfunc(X[,1])/3, size = 1);
+            true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])/3))
+  n: 150
+  $preds: X
+  $outcome: y
+  $truth: true_curve
+
+impulse: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
+            myfunc <- function(x){(x > 0 & x < 3)*exp(-x) + (x == 3)*1 + (x > 3 & x < 7)*exp(-(x-3)) + (x == 7)*1 + (x > 7)*exp(-(x-7))};
+            y <- rbinom(n, prob = myfunc(X[,1]), size = 1);
+            true_curve <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])))
   n: 150
   $preds: X
   $outcome: y
@@ -134,7 +152,7 @@ treedepth: R( mytreedepth <- comp_table$Max_Treedepth/comp_table$Num_Samples)
   
 DSC:
   define:
-    simulate: bigstep, smooth, joinpoint
+    simulate: bigstep, smooth, joinpoint, lineflat, impulse
     analyze: HPR, GPR, Pspline
     score: mad, width, cover, pointwise_bias, pointwise_width, pointwise_cover, div, time, rhat, min_samp_bulk, min_samp_tail, treedepth
   run: simulate * analyze * score

@@ -29,6 +29,7 @@ bin_plm_results <- read_csv("Finished_Results/bin_plm_results.csv")
 load("Finished_Results/gaussian_results.RData")
 gaussian_results2 <- as_tibble(gaussian_results)
 gaussian_results2$simulate[gaussian_results2$simulate=="smooth"] <- "bounce"
+gaussian_results2 <- filter(gaussian_results2, simulate != "lineflat", simulate != "smallstep")
 gaussian_pw_bias <- filter(gaussian_results2, score=="pointwise_bias") %>% unnest(score.metric)
 gaussian_pw_width <- filter(gaussian_results2, score=="pointwise_width") %>% unnest(score.metric)
 gaussian_pw_cover <- filter(gaussian_results2, score=="pointwise_cover") %>% unnest(score.metric)
@@ -39,6 +40,7 @@ gaussian_results <- unnest(gaussian_results, score.metric)
 load("Finished_Results/binomial_results.RData")
 binomial_results2 <- as_tibble(binomial_results)
 binomial_results2$simulate[binomial_results2$simulate=="smooth"] <- "bounce"
+binomial_results2 <- filter(binomial_results2, simulate != "lineflat")
 binomial_pw_bias <- filter(binomial_results2, score=="pointwise_bias") %>% unnest(score.metric)
 binomial_pw_width <- filter(binomial_results2, score=="pointwise_width") %>% unnest(score.metric)
 binomial_pw_cover <- filter(binomial_results2, score=="pointwise_cover") %>% unnest(score.metric)
@@ -48,7 +50,9 @@ binomial_results <- unnest(binomial_results, score.metric)
 
 load("Finished_Results/poisson_results.RData")
 poisson_results2 <- as_tibble(poisson_results)
+poisson_results2 <- filter(poisson_results2, simulate != "lineflat")
 poisson_results2$simulate[poisson_results2$simulate=="smooth"] <- "bounce"
+poisson_results2 <- filter(poisson_results2, simulate != "lineflat")
 poisson_pw_bias <- filter(poisson_results2, score=="pointwise_bias") %>% unnest(score.metric)
 poisson_pw_width <- filter(poisson_results2, score=="pointwise_width") %>% unnest(score.metric)
 poisson_pw_cover <- filter(poisson_results2, score=="pointwise_cover") %>% unnest(score.metric)
@@ -64,6 +68,7 @@ gg_color_hue <- function(n) {
 }
 
 tri_col <- gg_color_hue(3)
+quint_col <- gg_color_hue(5)
 ```
 
 ## Binomial Results
@@ -137,6 +142,24 @@ mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit)
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
 preds <- predict(mymodel, se.fit = TRUE);
 mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
+
+myfunc <- function(x){(x == 2)*1 + (x > 0 & x < 3)*exp(-x) + (x == 3)*1 + (x > 3 & x < 7)*exp(-(x-3)) + (x == 7)*1 + (x > 7)*exp(-(x-7))}
+y <- rbinom(n, prob = myfunc(X[,1]), size = 1);
+sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "impulse"))
+
+mymodel <- hpr(y = y, X = X, family = "binomial");
+subdat <- get_f(mymodel, alpha = 0.05);
+subdat$Model <- "HPR"
+subdat$simulate <- "impulse"
+mycurvefitsb <- rbind(mycurvefitsb, subdat)
+
+gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "binomial");
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "impulse", "Mean" = NA))
+
+mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "impulse", "Mean" = NA))
 
 mycurvefitsb$Model <- factor(mycurvefitsb$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
@@ -234,6 +257,24 @@ mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
 preds <- predict(mymodel, se.fit = TRUE);
 mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
+
+myfunc <- function(x){(x == 2)*1 + (x > 0 & x < 3)*exp(-x) + (x == 3)*1 + (x > 3 & x < 7)*exp(-(x-3)) + (x == 7)*1 + (x > 7)*exp(-(x-7))};
+y <- rpois(n, lambda = myfunc(X[,1])*5)
+sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1])*5, "y" = y, "simulate" = "impulse"))
+
+mymodel <- hpr(y = y, X = X, family = "poisson");
+subdat <- get_f(mymodel, alpha = 0.05);
+subdat$Model <- "HPR"
+subdat$simulate <- "impulse"
+mycurvefitsp <- rbind(mycurvefitsp, subdat)
+
+gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "poisson");
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "impulse", "Mean" = NA))
+
+mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
+preds <- predict(mymodel, se.fit = TRUE);
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "impulse", "Mean" = NA))
 
 mycurvefitsp$Model <- factor(mycurvefitsp$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
@@ -334,23 +375,24 @@ mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
 preds <- predict(mymodel, se.fit = TRUE);
 mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
 
-myfunc <- function(x){(x <= 2)*0 + (x > 2 & x <= 5)*1 + (x > 5 & x <= 6)*2 + (x > 6 & x <= 8)*1 + (x > 8)*3};
+sd <- 0.1
+myfunc <- function(x){(x == 2)*1 + (x > 0 & x < 3)*exp(-x) + (x == 3)*1 + (x > 3 & x < 7)*exp(-(x-3)) + (x == 7)*1 + (x > 7)*exp(-(x-7))}
 y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
-sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "smallstep"))
+sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "impulse"))
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
 subdat <- get_f(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
-subdat$simulate <- "smallstep"
+subdat$simulate <- "impulse"
 mycurvefits <- rbind(mycurvefits, subdat)
 
 gp_lin <- gam(y ~ s(X[,1], bs = "gp"));
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (gp_fit_lin$fit), "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "smallstep", "Mean" = NA))
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = (gp_fit_lin$fit), "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "impulse", "Mean" = NA))
 
 mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
 preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "smallstep", "Mean" = NA))
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "impulse", "Mean" = NA))
 
 mycurvefits$Model <- factor(mycurvefits$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
