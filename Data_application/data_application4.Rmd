@@ -14,6 +14,7 @@ library(gamlss)
 library(kableExtra)
 
 bbt_data <- read_csv("~/Desktop/Research/Dissertation/Chapter_One/HPR_Sims/Data_application/menstruation_data2.csv")
+options(mc.cores=3)
 ```
 
 Menstruating women:
@@ -135,7 +136,7 @@ fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
 
 wh_estimates <- data.frame("Subject" = c("A", "B", "C", "D"), "Hypothesis" = c(24.5, NA, 16.5, 15.5))
 
-mens_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 2, scales = "free")
+mens_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model, linetype = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 2, scales = "free")
 
 ggsave("mens_plot.pdf", mens_plot)
 ```
@@ -201,7 +202,7 @@ fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
 
 wh_estimates <- data.frame("Subject" = c("A", "B"), "Hypothesis" = c(15.5, 15.5))
 
-preg_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 1, scales = "free")
+preg_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model, linetype = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 1, scales = "free")
 
 ggsave("preg_plot.pdf", preg_plot, width = 6, height = 4)
 ```
@@ -219,7 +220,7 @@ curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
 curve_estim1$Model <- "HPR"
 mybetafits <- get_betas(uni_hpr1, alpha = 0.05)
   
-fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "orange", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median-mybetafits$Median*(3/34), color = Model)) + geom_ribbon(aes(x = x, ymin = Lower-mybetafits$Median*(3/34), ymax = Upper-mybetafits$Median*(3/34), fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) 
+fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median-mybetafits$Median*(3/34), color = Model)) + geom_ribbon(aes(x = x, ymin = Lower-mybetafits$Median*(3/34), ymax = Upper-mybetafits$Median*(3/34), fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) 
 
 fever_plot
 

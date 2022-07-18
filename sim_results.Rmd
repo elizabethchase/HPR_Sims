@@ -69,6 +69,8 @@ gg_color_hue <- function(n) {
 
 tri_col <- gg_color_hue(3)
 quint_col <- gg_color_hue(5)
+
+options(mc.cores=3)
 ```
 
 ## Binomial Results
@@ -312,7 +314,7 @@ mad_bin <- ggplot(data = filter(gaussian_results, score=="mad")) + geom_boxplot(
 
 width_bin <- ggplot(data = filter(gaussian_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12))
 
-cover_bin <- ggplot(data = filter(gaussian_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
+cover_bin <- ggplot(data = filter(gaussian_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red", linetype = "dashed")
 
 #Creating sample datasets and sample performance:
 n <- 100
@@ -396,7 +398,7 @@ mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (
 
 mycurvefits$Model <- factor(mycurvefits$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
 
-sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
+sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model, linetype = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
 
 gaus_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4, align = "v")
 ggsave("Finished_Plots/gaus_perf.pdf", gaus_perf, width = 8, height = 12)
@@ -683,7 +685,7 @@ mad_obs <- ggplot(data = filter(gaussian_aug_results, score=="mad_obs" | score==
 
 width_obs <- ggplot(data = filter(gaussian_aug_results, score=="width_obs" | score=="width_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74"))
 
-cover_obs <- ggplot(data = filter(gaussian_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red")
+cover_obs <- ggplot(data = filter(gaussian_aug_results, score=="cover_obs" | score=="cover_aug")) + geom_boxplot(aes(x = analyze, y = score.metric, fill = score)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), legend.position = "none", text=element_text(size=12)) + scale_fill_manual(values = c("mediumpurple4", "grey74")) + geom_hline(yintercept = 0.95, color = "red", linetype = "dashed")
 
 gaus_aug_perf <- plot_grid(mad_obs, width_obs, cover_obs, nrow = 3, align = "v")
 ggsave("Finished_Plots/gaus_aug_perf.pdf", gaus_aug_perf, width = 8, height = 14)
