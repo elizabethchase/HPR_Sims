@@ -54,13 +54,11 @@ smooth: R( library(dplyr);
 HPR: R( library(HPR);
         mymodel <- hpr(y = y, X = X, Z = as.matrix(Z), family = "gaussian");
         mybetafits <- get_betas(mymodel, alpha = 0.05, var_names = c("Weight", "Income", "Sex", "Height"));
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
         mypredfits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome
   Z: $lin_preds
-  $curve_fit: mycurvefits
   $beta_fit: mybetafits
   $pred_fit: mypredfits
   $comp_perf: mycompperf
@@ -72,39 +70,33 @@ GPR: R( library(mgcv);
         start.time <- Sys.time();
         gp_lin <- gam(y ~ s(x, bs = "gp") + Weight + Income + Sex + Height, family = "gaussian", data = newdata);
         gp_fit_ys <- predict(gp_lin, newdata = newdata, type = "link", se.fit = TRUE);
-        gp_fit_fs <- predict(gp_lin, newdata = newdata, type = "terms", se.fit = TRUE);
         end.time <- Sys.time();
         time.taken <- as.numeric(difftime(end.time, start.time, units="secs"));
-        mycurvefits <- data.frame("Median" = gp_fit_fs$fit[,"s(x)"], "Lower" = gp_fit_fs$fit[,"s(x)"] - 1.96*gp_fit_fs$se.fit[,"s(x)"], "Upper" = gp_fit_fs$fit[,"s(x)"] + 1.96*gp_fit_fs$se.fit[,"s(x)"], "x" = X[,1]);
         mybetafits <- data.frame("Median" = summary(gp_lin)$p.coeff[-1], "Lower" = summary(gp_lin)$p.coeff[-1] - 1.96*summary(gp_lin)$se[2:5], "Upper" = summary(gp_lin)$p.coeff[-1] + 1.96*summary(gp_lin)$se[2:5], "Variable" = c("Weight", "Income", "Sex", "Height"));
         mypredfits <- data.frame("Median" = gp_fit_ys$fit, "Lower" = gp_fit_ys$fit - 1.96*gp_fit_ys$se.fit, "Upper" = gp_fit_ys$fit + 1.96*gp_fit_ys$se.fit, "x" = X[,1]);
         mycompperf <- data.frame("Time" = time.taken, "Divergences" = NA, "Max_Treedepth" = NA, "RHat" = NA, "Min_Ess_Bulk" = NA, "Min_Ess_Tail" = NA, "Num_Param" = NA, "Num_Samples" = NA))
   X: $preds
   y: $outcome
   Z: $lin_preds
-  $curve_fit: mycurvefits
   $beta_fit: mybetafits
   $pred_fit: mypredfits
   $comp_perf: mycompperf
   
-Pspline: R( library(gamlss);
-            newdata <- Z;
-            newdata$y <- y;
-            newdata$x <- X[,1];
-            start.time <- Sys.time();
-            mymodel <- gamlss(y ~ pb(x, control = pb.control(order = 1)) + Weight + Income + Sex + Height, data = newdata);
-            preds_ys <- predict(mymodel, se.fit = TRUE);
-            preds_fs <- predict(mymodel, se.fit = TRUE, type = "terms");
-            end.time <- Sys.time();
-            time.taken <- as.numeric(difftime(end.time, start.time, units="secs"));
-            mycurvefits <- data.frame("Median" = preds_fs$fit[,"pb(x, control = pb.control(order = 1))"], "Lower" = preds_fs$fit[,"pb(x, control = pb.control(order = 1))"] - 1.96*preds_fs$se.fit[,"pb(x, control = pb.control(order = 1))"], "Upper" = preds_fs$fit[,"pb(x, control = pb.control(order = 1))"] + 1.96*preds_fs$se.fit[,"pb(x, control = pb.control(order = 1))"], "x" = X[,1]);
-            mybetafits <- data.frame("Median" = summary(mymodel)[3:6, 1], "Lower" = summary(mymodel)[3:6, 1] - 1.96*summary(mymodel)[3:6, 2], "Upper" = summary(mymodel)[3:6, 1] + 1.96*summary(mymodel)[3:6, 2], "Variable" = c("Weight", "Income", "Sex", "Height"));
-            mypredfits <- data.frame("Median" = preds_ys$fit, "Lower" = preds_ys$fit - 1.96*preds_ys$se.fit, "Upper" = preds_ys$fit + 1.96*preds_ys$se.fit, "x" = X[,1]);
-            mycompperf <- data.frame("Time" = time.taken, "Divergences" = NA, "Max_Treedepth" = NA, "RHat" = NA, "Min_Ess_Bulk" = NA, "Min_Ess_Tail" = NA, "Num_Param" = NA, "Num_Samples" = NA))
+Adspline: R( library(mgcv);
+        newdata <- Z;
+        newdata$y <- y;
+        newdata$x <- X[,1];
+        start.time <- Sys.time();
+        gp_lin <- gam(y ~ s(x, bs = "ad") + Weight + Income + Sex + Height, family = "gaussian", data = newdata);
+        gp_fit_ys <- predict(gp_lin, newdata = newdata, type = "link", se.fit = TRUE);
+        end.time <- Sys.time();
+        time.taken <- as.numeric(difftime(end.time, start.time, units="secs"));
+        mybetafits <- data.frame("Median" = summary(gp_lin)$p.coeff[-1], "Lower" = summary(gp_lin)$p.coeff[-1] - 1.96*summary(gp_lin)$se[2:5], "Upper" = summary(gp_lin)$p.coeff[-1] + 1.96*summary(gp_lin)$se[2:5], "Variable" = c("Weight", "Income", "Sex", "Height"));
+        mypredfits <- data.frame("Median" = gp_fit_ys$fit, "Lower" = gp_fit_ys$fit - 1.96*gp_fit_ys$se.fit, "Upper" = gp_fit_ys$fit + 1.96*gp_fit_ys$se.fit, "x" = X[,1]);
+        mycompperf <- data.frame("Time" = time.taken, "Divergences" = NA, "Max_Treedepth" = NA, "RHat" = NA, "Min_Ess_Bulk" = NA, "Min_Ess_Tail" = NA, "Num_Param" = NA, "Num_Samples" = NA))
   X: $preds
   y: $outcome
   Z: $lin_preds
-  $curve_fit: mycurvefits
   $beta_fit: mybetafits
   $pred_fit: mypredfits
   $comp_perf: mycompperf
@@ -192,6 +184,6 @@ DSC:
   define:
     presimulate: presim
     simulate: bigstep, smooth
-    analyze: HPR, GPR, Pspline
+    analyze: HPR, GPR, Adspline
     score: pred_diff, pred_cover, pred_width, beta1_value, beta2_value, beta3_value, beta4_value, beta1_cover, beta2_cover, beta3_cover, beta4_cover, div, time, rhat, min_samp_bulk, min_samp_tail, treedepth
   run: presimulate * simulate * analyze * score

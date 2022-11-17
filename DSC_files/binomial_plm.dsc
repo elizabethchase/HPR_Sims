@@ -76,18 +76,18 @@ GPR: R( library(mgcv);
   $pred_fit: mypredfits
   $comp_perf: mycompperf
   
-Pspline: R( library(gamlss);
-            newdata <- Z;
-            newdata$y <- y;
-            newdata$x <- X[,1];
-            start.time <- Sys.time();
-            mymodel <- gamlss(y ~ pb(x, control = pb.control(order = 1)) + Weight + Income + Sex + Height, data = newdata, family = "BB");
-            preds_ys <- predict(mymodel, se.fit = TRUE);
-            end.time <- Sys.time();
-            time.taken <- as.numeric(difftime(end.time, start.time, units="secs"));
-            mybetafits <- data.frame("Median" = exp(summary(mymodel)[3:6, 1]), "Lower" = exp(summary(mymodel)[3:6, 1] - 1.96*summary(mymodel)[3:6, 2]), "Upper" = exp(summary(mymodel)[3:6, 1] + 1.96*summary(mymodel)[3:6, 2]), "Variable" = c("Weight", "Income", "Sex", "Height"));
-            mypredfits <- data.frame("Median" = plogis(preds_ys$fit), "Lower" = plogis(preds_ys$fit - 1.96*preds_ys$se.fit), "Upper" = plogis(preds_ys$fit + 1.96*preds_ys$se.fit), "x" = X[,1]);
-            mycompperf <- data.frame("Time" = time.taken, "Divergences" = NA, "Max_Treedepth" = NA, "RHat" = NA, "Min_Ess_Bulk" = NA, "Min_Ess_Tail" = NA, "Num_Param" = NA, "Num_Samples" = NA))
+Adspline: R( library(mgcv);
+        newdata <- Z;
+        newdata$y <- y;
+        newdata$x <- X[,1];
+        start.time <- Sys.time();
+        gp_lin <- gam(y ~ s(x, bs = "ad") + Weight + Income + Sex + Height, family = "binomial", data = newdata);
+        gp_fit_ys <- predict(gp_lin, newdata = newdata, type = "link", se.fit = TRUE);
+        end.time <- Sys.time();
+        time.taken <- as.numeric(difftime(end.time, start.time, units="secs"));
+        mybetafits <- data.frame("Median" = exp(summary(gp_lin)$p.coeff[-1]), "Lower" = exp(summary(gp_lin)$p.coeff[-1] - 1.96*summary(gp_lin)$se[2:5]), "Upper" = exp(summary(gp_lin)$p.coeff[-1] + 1.96*summary(gp_lin)$se[2:5]), "Variable" = c("Weight", "Income", "Sex", "Height"));
+        mypredfits <- data.frame("Median" = plogis(gp_fit_ys$fit), "Lower" = plogis(gp_fit_ys$fit - 1.96*gp_fit_ys$se.fit), "Upper" = plogis(gp_fit_ys$fit + 1.96*gp_fit_ys$se.fit), "x" = X[,1]);
+        mycompperf <- data.frame("Time" = time.taken, "Divergences" = NA, "Max_Treedepth" = NA, "RHat" = NA, "Min_Ess_Bulk" = NA, "Min_Ess_Tail" = NA, "Num_Param" = NA, "Num_Samples" = NA))
   X: $preds
   y: $outcome
   Z: $lin_preds
@@ -178,6 +178,6 @@ DSC:
   define:
     presimulate: presim
     simulate: bigstep, smooth
-    analyze: HPR, GPR, Pspline
+    analyze: HPR, GPR, Adspline
     score: pred_diff, pred_cover, pred_width, beta1_value, beta2_value, beta3_value, beta4_value, beta1_cover, beta2_cover, beta3_cover, beta4_cover, div, time, rhat, min_samp_bulk, min_samp_tail, treedepth
   run: presimulate * simulate * analyze * score

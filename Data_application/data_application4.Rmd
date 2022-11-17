@@ -28,8 +28,8 @@ X <- as.matrix(dat$Day, ncol = 1)
 y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
-curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HPR"
+curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HMRF"
 curve_estim1$Subject <- "A"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -39,10 +39,11 @@ mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 
 mycurvefits$Model <- "GPR"
 mycurvefits$Subject <- "A"
 
-mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
-mycurvefits2$Model <- "Pspline"
+uni_adspline <- gam(Temperature ~ s(Day, bs = "ad", k = length(dat$Day)), data = dat)
+adspline_fit <- predict(uni_adspline, newdata = dat, se.fit = TRUE)
+
+mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$fit - 1.96*adspline_fit$se.fit, "Upper" = adspline_fit$fit + 1.96*adspline_fit$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "A"
 
 fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2)
@@ -57,8 +58,8 @@ X <- as.matrix(dat$Day, ncol = 1)
 y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
-curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HPR"
+curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HMRF"
 curve_estim1$Subject <- "B"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -68,10 +69,11 @@ mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 
 mycurvefits$Model <- "GPR"
 mycurvefits$Subject <- "B"
 
-mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
-mycurvefits2$Model <- "Pspline"
+uni_adspline <- gam(Temperature ~ s(Day, bs = "ad", k = length(dat$Day)), data = dat)
+adspline_fit <- predict(uni_adspline, newdata = dat, se.fit = TRUE)
+
+mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$fit - 1.96*adspline_fit$se.fit, "Upper" = adspline_fit$fit + 1.96*adspline_fit$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "B"
 
 fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
@@ -86,8 +88,8 @@ X <- as.matrix(dat$Day, ncol = 1)
 y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
-curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HPR"
+curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HMRF"
 curve_estim1$Subject <- "C"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -97,10 +99,11 @@ mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 
 mycurvefits$Model <- "GPR"
 mycurvefits$Subject <- "C"
 
-mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
-mycurvefits2$Model <- "Pspline"
+uni_adspline <- gam(Temperature ~ s(Day, bs = "ad", k = length(dat$Day)), data = dat)
+adspline_fit <- predict(uni_adspline, newdata = dat, se.fit = TRUE)
+
+mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$fit - 1.96*adspline_fit$se.fit, "Upper" = adspline_fit$fit + 1.96*adspline_fit$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "C"
 
 fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
@@ -115,8 +118,8 @@ X <- as.matrix(dat$Day, ncol = 1)
 y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
-curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HPR"
+curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HMRF"
 curve_estim1$Subject <- "D"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -126,10 +129,11 @@ mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 
 mycurvefits$Model <- "GPR"
 mycurvefits$Subject <- "D"
 
-mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
-mycurvefits2$Model <- "Pspline"
+uni_adspline <- gam(Temperature ~ s(Day, bs = "ad", k = length(dat$Day)), data = dat)
+adspline_fit <- predict(uni_adspline, newdata = dat, se.fit = TRUE)
+
+mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$fit - 1.96*adspline_fit$se.fit, "Upper" = adspline_fit$fit + 1.96*adspline_fit$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "D"
 
 fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
@@ -152,8 +156,8 @@ X <- as.matrix(dat$Day, ncol = 1)
 y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
-curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HPR"
+curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HMRF"
 curve_estim1$Subject <- "A"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -163,10 +167,11 @@ mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 
 mycurvefits$Model <- "GPR"
 mycurvefits$Subject <- "A"
 
-mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
-mycurvefits2$Model <- "Pspline"
+uni_adspline <- gam(Temperature ~ s(Day, bs = "ad", k = length(dat$Day)), data = dat)
+adspline_fit <- predict(uni_adspline, newdata = dat, se.fit = TRUE)
+
+mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$fit - 1.96*adspline_fit$se.fit, "Upper" = adspline_fit$fit + 1.96*adspline_fit$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "A"
 
 fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2)
@@ -181,8 +186,8 @@ X <- as.matrix(dat$Day, ncol = 1)
 y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
-curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HPR"
+curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HMRF"
 curve_estim1$Subject <- "B"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -192,10 +197,11 @@ mycurvefits <- data.frame("Median" = gp_fit_lin$fit, "Lower" = gp_fit_lin$fit - 
 mycurvefits$Model <- "GPR"
 mycurvefits$Subject <- "B"
 
-mymodel <- gamlss(Temperature ~ pb(Day, control = pb.control(order = 0)), data = dat);
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits2 <- data.frame("Median" = preds$fit, "Lower" = preds$fit - 1.96*preds$se.fit, "Upper" = preds$fit + 1.96*preds$se.fit, "x" = dat$Day, "Mean" = NA);
-mycurvefits2$Model <- "Pspline"
+uni_adspline <- gam(Temperature ~ s(Day, bs = "ad", k = length(dat$Day)), data = dat)
+adspline_fit <- predict(uni_adspline, newdata = dat, se.fit = TRUE)
+
+mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$fit - 1.96*adspline_fit$se.fit, "Upper" = adspline_fit$fit + 1.96*adspline_fit$se.fit, "x" = dat$Day, "Mean" = NA);
+mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "B"
 
 fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
@@ -216,11 +222,11 @@ y <- dat$Temperature
 Z <- as.matrix(cbind(dat$Aberration), ncol = 1)
 
 uni_hpr1 <- hpr(y = y, X = X, Z = Z, family = "gaussian")
-curve_estim1 <- get_f(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HPR"
-mybetafits <- get_betas(uni_hpr1, alpha = 0.05)
+curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
+curve_estim1$Model <- "HMRF"
+mybetafits <- get_betas(uni_hpr1, alpha = 0.05, var_names = "fever")
   
-fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median-mybetafits$Median*(3/34), color = Model)) + geom_ribbon(aes(x = x, ymin = Lower-mybetafits$Median*(3/34), ymax = Upper-mybetafits$Median*(3/34), fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) 
+fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) 
 
 fever_plot
 

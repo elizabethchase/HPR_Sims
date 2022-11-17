@@ -22,7 +22,7 @@ smooth: R(  X <- as.matrix(sample(seq(0, 10, by = 0.03), size = n), ncol = 1);
   
 HPR_obs: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "gaussian");
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
+        mycurvefits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome
@@ -31,7 +31,7 @@ HPR_obs: R( library(HPR);
   
 HPR_five: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "gaussian", X_aug = list(seq(min(X[,1]), 10, by = 0.5)));
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
+        mycurvefits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome
@@ -40,7 +40,7 @@ HPR_five: R( library(HPR);
   
 HPR_one: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "gaussian", X_aug = list(seq(min(X[,1]), 10, by = 0.1)));
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
+        mycurvefits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome

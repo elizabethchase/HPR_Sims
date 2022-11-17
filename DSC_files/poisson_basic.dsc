@@ -45,7 +45,7 @@ impulse: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
 
 HPR: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "poisson");
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
+        mycurvefits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome
@@ -65,14 +65,14 @@ GPR: R( library(mgcv);
   $curve_fit: mycurvefits
   $comp_perf: mycompperf
   
-Pspline: R( library(gamlss);
-            start.time <- Sys.time();
-            mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
-            preds <- predict(mymodel, se.fit = TRUE);
-            end.time <- Sys.time();
-            time.taken <- as.numeric(difftime(end.time, start.time, units="secs"));
-            mycurvefits <- data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1]);
-            mycompperf <- data.frame("Time" = time.taken, "Divergences" = NA, "Max_Treedepth" = NA, "RHat" = NA, "Min_Ess_Bulk" = NA, "Min_Ess_Tail" = NA, "Num_Param" = NA, "Num_Samples" = NA))
+Adspline: R( library(mgcv);
+        start.time <- Sys.time();
+        gp_lin <- gam(y ~ s(X[,1], bs = "ad"), family = "poisson");
+        gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+        end.time <- Sys.time();
+        time.taken <- as.numeric(difftime(end.time, start.time, units="secs"));
+        mycurvefits <- data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1]);
+        mycompperf <- data.frame("Time" = time.taken, "Divergences" = NA, "Max_Treedepth" = NA, "RHat" = NA, "Min_Ess_Bulk" = NA, "Min_Ess_Tail" = NA, "Num_Param" = NA, "Num_Samples" = NA))
   X: $preds
   y: $outcome
   $curve_fit: mycurvefits
@@ -153,6 +153,6 @@ treedepth: R( mytreedepth <- comp_table$Max_Treedepth/comp_table$Num_Samples)
 DSC:
   define:
     simulate: bigstep, smooth, joinpoint, lineflat, impulse
-    analyze: HPR, GPR, Pspline
+    analyze: HPR, GPR, Adspline
     score: mad, width, cover, pointwise_bias, pointwise_width, pointwise_cover, div, time, rhat, min_samp_bulk, min_samp_tail, treedepth
   run: simulate * analyze * score

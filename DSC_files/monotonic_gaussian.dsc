@@ -20,7 +20,7 @@ smooth: R(  X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
   
 HPR: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "gaussian");
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
+        mycurvefits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome
@@ -29,7 +29,7 @@ HPR: R( library(HPR);
   
 HPR_exp: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "exp");
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
+        mycurvefits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome
@@ -38,7 +38,7 @@ HPR_exp: R( library(HPR);
   
 HPR_abs: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "abs");
-        mycurvefits <- get_f(mymodel, alpha = 0.05);
+        mycurvefits <- get_preds(mymodel, alpha = 0.05);
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome

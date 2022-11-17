@@ -76,10 +76,10 @@ options(mc.cores=3)
 ## Binomial Results
 
 ```{r binomial_perf}
-binomial_results$analyze <- factor(binomial_results$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
-binomial_pw_bias$analyze <- factor(binomial_pw_bias$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
-binomial_pw_width$analyze <- factor(binomial_pw_width$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
-binomial_pw_cover$analyze <- factor(binomial_pw_cover$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+binomial_results$analyze <- factor(binomial_results$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
+binomial_pw_bias$analyze <- factor(binomial_pw_bias$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
+binomial_pw_width$analyze <- factor(binomial_pw_width$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
+binomial_pw_cover$analyze <- factor(binomial_pw_cover$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
 
 mad_bin <- ggplot(data = filter(binomial_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) 
 
@@ -95,7 +95,8 @@ y <- rbinom(n, prob = myfunc(X[,1])/10, size = 1);
 sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1])/10, "y" = y, "simulate" = "bigstep")
 
 mymodel <- hpr(y = y, X = X, family = "binomial");
-mycurvefitsb <- get_f(mymodel, alpha = 0.05);
+mycurvefitsb <- get_preds(mymodel, alpha = 0.05);
+mycurvefitsb$x <- X[,1]
 mycurvefitsb$Model <- "HPR"
 mycurvefitsb$simulate <- "bigstep"
 
@@ -104,17 +105,18 @@ gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", s
 
 mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bigstep", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
-preds <- predict(mymodel, se.fit = TRUE);
+mymodel <- gam(y ~ s(X[,1], bs = "ad"), family = "binomial");
+preds <- predict(mymodel, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 
-mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "bigstep", "Mean" = NA))
 
 myfunc <- function(x){abs(sin(x))}
 y <- rbinom(n, prob = myfunc(X[,1]), size = 1);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bounce"))
 
 mymodel <- hpr(y = y, X = X, family = "binomial");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "bounce"
 mycurvefitsb <- rbind(mycurvefitsb, subdat)
@@ -123,16 +125,18 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "binomial");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bounce", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bounce", "Mean" = NA))
+mymodel <- gam(y ~ s(X[,1], bs = "ad"), family = "binomial");
+preds <- predict(mymodel, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "bounce", "Mean" = NA))
 
 myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)}
 y <- rbinom(n, prob = myfunc(X[,1])/6, size = 1);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1])/6, "y" = y, "simulate" = "joinpoint"))
 
 mymodel <- hpr(y = y, X = X, family = "binomial");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "joinpoint"
 mycurvefitsb <- rbind(mycurvefitsb, subdat)
@@ -141,16 +145,18 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "binomial");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "joinpoint", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
+mymodel <- gam(y ~ s(X[,1], bs = "ad"), family = "binomial");
+preds <- predict(mymodel, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "joinpoint", "Mean" = NA))
 
 myfunc <- function(x){(x == 2)*1 + (x > 0 & x < 3)*exp(-x) + (x == 3)*1 + (x > 3 & x < 7)*exp(-(x-3)) + (x == 7)*1 + (x > 7)*exp(-(x-7))}
 y <- rbinom(n, prob = myfunc(X[,1]), size = 1);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "impulse"))
 
 mymodel <- hpr(y = y, X = X, family = "binomial");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "impulse"
 mycurvefitsb <- rbind(mycurvefitsb, subdat)
@@ -159,11 +165,11 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "binomial");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(gp_fit_lin$fit), "Lower" = plogis(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = plogis(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "impulse", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "BB");
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "impulse", "Mean" = NA))
+mymodel <- gam(y ~ s(X[,1], bs = "ad"), family = "binomial");
+preds <- predict(mymodel, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+mycurvefitsb <- rbind(mycurvefitsb, data.frame("Median" = plogis(preds$fit), "Lower" = plogis(preds$fit - 1.96*preds$se.fit), "Upper" = plogis(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "impulse", "Mean" = NA))
 
-mycurvefitsb$Model <- factor(mycurvefitsb$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+mycurvefitsb$Model <- factor(mycurvefitsb$Model, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
 
 sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefitsb, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefitsb, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
 
@@ -191,14 +197,14 @@ ggsave("Finished_Plots/bin_pw_perf.pdf", bin_perf2, width = 8, height = 12)
 ## Poisson Results
 
 ```{r poisson_perf}
-poisson_results$analyze <- factor(poisson_results$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
-poisson_pw_bias$analyze <- factor(poisson_pw_bias$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
-poisson_pw_width$analyze <- factor(poisson_pw_width$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
-poisson_pw_cover$analyze <- factor(poisson_pw_cover$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+poisson_results$analyze <- factor(poisson_results$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
+poisson_pw_bias$analyze <- factor(poisson_pw_bias$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
+poisson_pw_width$analyze <- factor(poisson_pw_width$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
+poisson_pw_cover$analyze <- factor(poisson_pw_cover$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
 
 mad_bin <- ggplot(data = filter(poisson_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) 
 
-width_bin <- ggplot(data = filter(poisson_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) 
+width_bin <- ggplot(data = filter(poisson_results, score=="width")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) + coord_cartesian(ylim = c(0, 8))
 
 cover_bin <- ggplot(data = filter(poisson_results, score=="cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")
 
@@ -210,7 +216,8 @@ y <- rpois(n, lambda = myfunc(X[,1]));
 sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bigstep")
 
 mymodel <- hpr(y = y, X = X, family = "poisson");
-mycurvefitsp <- get_f(mymodel, alpha = 0.05);
+mycurvefitsp <- get_preds(mymodel, alpha = 0.05);
+mycurvefitsp$x <- X[,1]
 mycurvefitsp$Model <- "HPR"
 mycurvefitsp$simulate <- "bigstep"
 
@@ -219,17 +226,19 @@ gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", s
 
 mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bigstep", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
-preds <- predict(mymodel, se.fit = TRUE);
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"), family = "poisson");
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 
-mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "bigstep", "Mean" = NA))
+
 
 myfunc <- function(x){abs(sin(x))}
 y <- rpois(n, lambda = myfunc(X[,1])*10);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1])*10, "y" = y, "simulate" = "bounce"))
 
 mymodel <- hpr(y = y, X = X, family = "poisson");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "bounce"
 mycurvefitsp <- rbind(mycurvefitsp, subdat)
@@ -238,16 +247,18 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "poisson");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bounce", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bounce", "Mean" = NA))
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"), family = "poisson");
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "bounce", "Mean" = NA))
 
 myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)};
 y <- rpois(n, lambda = myfunc(X[,1]))
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "joinpoint"))
 
 mymodel <- hpr(y = y, X = X, family = "poisson");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "joinpoint"
 mycurvefitsp <- rbind(mycurvefitsp, subdat)
@@ -256,16 +267,18 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "poisson");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "joinpoint", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"), family = "poisson");
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "joinpoint", "Mean" = NA))
 
 myfunc <- function(x){(x == 2)*1 + (x > 0 & x < 3)*exp(-x) + (x == 3)*1 + (x > 3 & x < 7)*exp(-(x-3)) + (x == 7)*1 + (x > 7)*exp(-(x-7))};
 y <- rpois(n, lambda = myfunc(X[,1])*5)
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1])*5, "y" = y, "simulate" = "impulse"))
 
 mymodel <- hpr(y = y, X = X, family = "poisson");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "impulse"
 mycurvefitsp <- rbind(mycurvefitsp, subdat)
@@ -274,13 +287,14 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"), family = "poisson");
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "impulse", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)), family = "PO");
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(preds$fit), "Lower" = exp(preds$fit - 1.96*preds$se.fit), "Upper" = exp(preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "impulse", "Mean" = NA))
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"), family = "poisson");
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 
-mycurvefitsp$Model <- factor(mycurvefitsp$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+mycurvefitsp <- rbind(mycurvefitsp, data.frame("Median" = exp(gp_fit_lin$fit), "Lower" = exp(gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = exp(gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "impulse", "Mean" = NA))
 
-sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefitsp, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefitsp, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
+mycurvefitsp$Model <- factor(mycurvefitsp$Model, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
+
+sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefitsp, aes(x = x, y = Median, color = Model)) + geom_ribbon(data = mycurvefitsp, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col) + coord_cartesian(ylim = c(0, 15))
 
 pois_perf <- plot_grid(sample_plot, mad_bin, width_bin, cover_bin, nrow = 4, align = "v")
 ggsave("Finished_Plots/pois_perf.pdf", pois_perf, width = 8, height = 12)
@@ -295,7 +309,7 @@ mad_bin2 <- ggplot(data = pw_bias) + geom_line(aes(x = x, y = bias, color = anal
 
 cover_bin2 <-  ggplot(data = pw_cover) + geom_line(aes(x = x, y = cover, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("95% Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + geom_hline(yintercept = 0.95, color = "red") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "blue"))
 
-width_bin2 <-  ggplot(data = pw_width) + geom_line(aes(x = x, y = width, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean 95% Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "blue"))
+width_bin2 <-  ggplot(data = pw_width) + geom_line(aes(x = x, y = width, color = analyze), alpha = 0.8) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean 95% Credible Interval Width") + theme(strip.background = element_blank(), strip.text.x = element_blank(), text=element_text(size=12), legend.position = "none") + guides(color=guide_legend(title="Model")) + scale_color_manual(values = c("gray", "gray", "blue")) + coord_cartesian(ylim = c(0,8))
 
 sample_plot2 <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") 
 
@@ -306,9 +320,9 @@ ggsave("Finished_Plots/pois_pw_perf.pdf", pois_perf, width = 8, height = 12)
 ## Gaussian Results
 
 ```{r gaussian_perf}
-gaussian_pw_bias$analyze <- factor(gaussian_pw_bias$analyze, levels = c("Pspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
-gaussian_pw_width$analyze <- factor(gaussian_pw_width$analyze, levels = c("Pspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
-gaussian_pw_cover$analyze <- factor(gaussian_pw_cover$analyze, levels = c("Pspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
+gaussian_pw_bias$analyze <- factor(gaussian_pw_bias$analyze, levels = c("Adspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
+gaussian_pw_width$analyze <- factor(gaussian_pw_width$analyze, levels = c("Adspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
+gaussian_pw_cover$analyze <- factor(gaussian_pw_cover$analyze, levels = c("Adspline", "GPR", "MedFilt", "TrendFilt", "HPR"), ordered = TRUE)
 
 mad_bin <- ggplot(data = filter(gaussian_results, score=="mad")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
 
@@ -325,7 +339,8 @@ y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bigstep")
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
-mycurvefits <- get_f(mymodel, alpha = 0.05);
+mycurvefits <- get_preds(mymodel, alpha = 0.05);
+mycurvefits$x <- X[,1]
 mycurvefits$Model <- "HPR"
 mycurvefits$simulate <- "bigstep"
 
@@ -334,10 +349,10 @@ gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", s
 
 mycurvefits <- rbind(mycurvefits, data.frame("Median" = gp_fit_lin$fit, "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bigstep", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
-preds <- predict(mymodel, se.fit = TRUE);
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"));
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bigstep", "Mean" = NA))
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = gp_fit_lin$fit, "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "bigstep", "Mean" = NA))
 
 sd <- 0.2
 myfunc <- function(x){abs(sin(x))}
@@ -345,7 +360,8 @@ y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bounce"))
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "bounce"
 mycurvefits <- rbind(mycurvefits, subdat)
@@ -354,9 +370,10 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"));
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefits <- rbind(mycurvefits, data.frame("Median" = (gp_fit_lin$fit), "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "bounce", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "bounce", "Mean" = NA))
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"));
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = gp_fit_lin$fit, "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "bounce", "Mean" = NA))
 
 sd <- 0.5
 myfunc <- function(x){(1.5*x)*(x < 2) + (16 - 5*x)*(x >= 2 & x < 3) + (x >= 3 & x < 6) + (10 - x)*(x >= 6 & x < 9) + (-44 + 5*x)*(x >= 9)};
@@ -364,7 +381,8 @@ y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "joinpoint"))
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "joinpoint"
 mycurvefits <- rbind(mycurvefits, subdat)
@@ -373,9 +391,10 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"));
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefits <- rbind(mycurvefits, data.frame("Median" = (gp_fit_lin$fit), "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "joinpoint", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "joinpoint", "Mean" = NA))
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"));
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
+
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = gp_fit_lin$fit, "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "joinpoint", "Mean" = NA))
 
 sd <- 0.1
 myfunc <- function(x){(x == 2)*1 + (x > 0 & x < 3)*exp(-x) + (x == 3)*1 + (x > 3 & x < 7)*exp(-(x-3)) + (x == 7)*1 + (x > 7)*exp(-(x-7))}
@@ -383,7 +402,8 @@ y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "impulse"))
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "impulse"
 mycurvefits <- rbind(mycurvefits, subdat)
@@ -392,11 +412,12 @@ gp_lin <- gam(y ~ s(X[,1], bs = "gp"));
 gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 mycurvefits <- rbind(mycurvefits, data.frame("Median" = (gp_fit_lin$fit), "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "GPR", "simulate" = "impulse", "Mean" = NA))
 
-mymodel <- gamlss(y ~ pb(X[,1], control = pb.control(order = 0)));
-preds <- predict(mymodel, se.fit = TRUE);
-mycurvefits <- rbind(mycurvefits, data.frame("Median" = (preds$fit), "Lower" = (preds$fit - 1.96*preds$se.fit), "Upper" = (preds$fit + 1.96*preds$se.fit), "x" = X[,1], "Model" = "Pspline", "simulate" = "impulse", "Mean" = NA))
+gp_lin <- gam(y ~ s(X[,1], bs = "ad"));
+gp_fit_lin <- predict(gp_lin, newdata = data.frame("x"= X[,1]), type = "link", se.fit = TRUE);
 
-mycurvefits$Model <- factor(mycurvefits$Model, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+mycurvefits <- rbind(mycurvefits, data.frame("Median" = gp_fit_lin$fit, "Lower" = (gp_fit_lin$fit - 1.96*gp_fit_lin$se.fit), "Upper" = (gp_fit_lin$fit + 1.96*gp_fit_lin$se.fit), "x" = X[,1], "Model" = "Adspline", "simulate" = "impulse", "Mean" = NA))
+
+mycurvefits$Model <- factor(mycurvefits$Model, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
 
 sample_plot <- ggplot() + geom_line(data = sim_data,aes(x = x, y = truth)) + geom_line(data = mycurvefits, aes(x = x, y = Median, color = Model, linetype = Model)) + geom_ribbon(data = mycurvefits, aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + geom_point(data = sim_data, aes(x = x, y = y), alpha = 0.5, size = 0.25) + facet_wrap(~simulate, nrow = 1, scales = "free_y") + theme_bw() + theme(legend.position = "top", text=element_text(size=12)) + ylab("y") + scale_color_manual(values = tri_col) + scale_fill_manual(values = tri_col)
 
@@ -468,18 +489,18 @@ y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "smooth")
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
-mycurvefitsm <- get_f(mymodel, alpha = 0.05);
+mycurvefitsm <- get_preds(mymodel, alpha = 0.05);
 mycurvefitsm$Model <- "HPR"
 mycurvefitsm$simulate <- "smooth"
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "exp");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_exp"
 subdat$simulate <- "smooth"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "abs");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_abs"
 subdat$simulate <- "smooth"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
@@ -490,19 +511,19 @@ y <- rnorm(n, mean = myfunc(X[,1]), sd = sd);
 sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate" = "bigstep"))
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
 subdat$Model <- "HPR"
 subdat$simulate <- "bigstep"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "exp");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_exp"
 subdat$simulate <- "bigstep"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "abs");
-subdat <- get_f(mymodel, alpha = 0.05);
+subdat <- get_preds(mymodel, alpha = 0.05);
 subdat$Model <- "HPR_abs"
 subdat$simulate <- "bigstep"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
@@ -559,9 +580,7 @@ beta_set$Beta <- case_when(
 
 beta_agg <- filter(beta_set, grepl("cover", score)) %>% group_by(Beta, analyze, simulate) %>% summarize(coverage = mean(score.metric))
 
-beta_agg$coverage[beta_agg$Beta=="beta1" & beta_agg$simulate=="bigstep" & beta_agg$analyze=="Pspline"] <- beta_agg$coverage[beta_agg$Beta=="beta1" & beta_agg$simulate=="bigstep" & beta_agg$analyze=="Pspline"] - 0.002
-
-beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
 beta_cover <- ggplot(data = beta_agg) + geom_jitter(aes(x = Beta, y = coverage, shape = analyze), width = 0.1) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom", text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red") + labs(shape = "Model") +
   scale_x_discrete(labels=c('beta1'=parse(text = TeX('$\\beta_1$')),
                             'beta2'=parse(text = TeX('$\\beta_2$')),
@@ -572,7 +591,7 @@ plm_betas <- plot_grid(beta1_bias, beta2_bias, beta3_bias, beta4_bias, beta_cove
 ggsave("Finished_Plots/plm_betas.pdf", plm_betas, width = 8, height = 12)
 ```
 
-```{r pois_plm}
+```{r pois_plm, eval = FALSE}
 mad_bin <- ggplot(data = filter(pois_plm_results, score=="pred_diff")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Mean Absolute Difference") + theme(axis.text.x = element_text(angle = 90), text=element_text(size=12)) 
 
 cover_bin <- ggplot(data = filter(pois_plm_results, score=="pred_cover")) + geom_boxplot(aes(x = analyze, y = score.metric)) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red") 
@@ -600,7 +619,7 @@ beta_set$Beta <- case_when(
 
 beta_agg <- filter(beta_set, grepl("cover", score)) %>% group_by(Beta, analyze, simulate) %>% summarize(coverage = mean(score.metric))
 
-beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
 
 beta_cover <- ggplot(data = beta_agg) + geom_jitter(aes(x = Beta, y = coverage, shape = analyze), width = 0.1) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom", text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red") + labs(shape = "Model")  + 
   scale_x_discrete(labels=c('beta1'=parse(text = TeX('$\\beta_1$')),
@@ -640,7 +659,7 @@ beta_set$Beta <- case_when(
 
 beta_agg <- filter(beta_set, grepl("cover", score)) %>% group_by(Beta, analyze, simulate) %>% summarize(coverage = mean(score.metric))
 
-beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Pspline", "GPR", "HPR"), ordered = TRUE)
+beta_agg$analyze <- factor(beta_agg$analyze, levels = c("Adspline", "GPR", "HPR"), ordered = TRUE)
 
 beta_cover <- ggplot(data = beta_agg) + geom_jitter(aes(x = Beta, y = coverage, shape = analyze), width = 0.1) + facet_wrap(~ simulate, nrow = 1, scales = "free_y") + theme_bw() + xlab("") + ylab("Credible Interval Coverage") + theme(strip.background = element_blank(), strip.text.x = element_blank(), axis.text.x = element_text(angle = 90), legend.position = "bottom", text=element_text(size=12)) + geom_hline(yintercept = 0.95, color = "red")  + labs(shape = "Model") +
   scale_x_discrete(labels=c('beta1'=parse(text = TeX('$\\beta_1$')), 
@@ -652,7 +671,7 @@ plm_betas <- plot_grid(beta1_bias, beta2_bias, beta3_bias, beta4_bias, beta_cove
 ggsave("Finished_Plots/bin_plm_betas.pdf", plm_betas, width = 8, height = 12)
 ```
 
-```{r comp_perf_plm}
+```{r comp_perf_plm, eval = FALSE}
 plm_results$Outcome <- "Gaussian PLM"
 bin_plm_results$Outcome <- "Binomial PLM"
 pois_plm_results$Outcome <- "Poisson PLM"
