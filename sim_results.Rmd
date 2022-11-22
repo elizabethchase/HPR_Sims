@@ -490,17 +490,20 @@ sim_data <- data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y" = y, "simulate"
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
 mycurvefitsm <- get_preds(mymodel, alpha = 0.05);
+mycurvefitsm$x <- X[,1]
 mycurvefitsm$Model <- "HPR"
 mycurvefitsm$simulate <- "smooth"
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "exp");
 subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR_exp"
 subdat$simulate <- "smooth"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "abs");
 subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR_abs"
 subdat$simulate <- "smooth"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
@@ -512,18 +515,21 @@ sim_data <- rbind(sim_data, data.frame("x" = X[,1], "truth" = myfunc(X[,1]), "y"
 
 mymodel <- hpr(y = y, X = X, family = "gaussian");
 subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR"
 subdat$simulate <- "bigstep"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "exp");
 subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR_exp"
 subdat$simulate <- "bigstep"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)
 
 mymodel <- hpr(y = y, X = X, family = "gaussian", monotonic_terms = 1, monotonic_approach = "abs");
 subdat <- get_preds(mymodel, alpha = 0.05);
+subdat$x <- X[,1]
 subdat$Model <- "HPR_abs"
 subdat$simulate <- "bigstep"
 mycurvefitsm <- rbind(mycurvefitsm, subdat)

@@ -29,7 +29,7 @@ y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
 curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HMRF"
+curve_estim1$Model <- "HPR"
 curve_estim1$Subject <- "A"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -59,7 +59,7 @@ y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
 curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HMRF"
+curve_estim1$Model <- "HPR"
 curve_estim1$Subject <- "B"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -89,7 +89,7 @@ y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
 curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HMRF"
+curve_estim1$Model <- "HPR"
 curve_estim1$Subject <- "C"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -119,7 +119,7 @@ y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
 curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HMRF"
+curve_estim1$Model <- "HPR"
 curve_estim1$Subject <- "D"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -157,7 +157,7 @@ y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
 curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HMRF"
+curve_estim1$Model <- "HPR"
 curve_estim1$Subject <- "A"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -187,7 +187,7 @@ y <- dat$Temperature
 
 uni_hpr1 <- hpr(y = y, X = X, family = "gaussian")
 curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HMRF"
+curve_estim1$Model <- "HPR"
 curve_estim1$Subject <- "B"
   
 uni_gpr1 <- gam(Temperature ~ s(Day, bs = "gp"), data = dat)
@@ -223,7 +223,7 @@ Z <- as.matrix(cbind(dat$Aberration), ncol = 1)
 
 uni_hpr1 <- hpr(y = y, X = X, Z = Z, family = "gaussian")
 curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
-curve_estim1$Model <- "HMRF"
+curve_estim1$Model <- "HPR"
 mybetafits <- get_betas(uni_hpr1, alpha = 0.05, var_names = "fever")
   
 fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) 
