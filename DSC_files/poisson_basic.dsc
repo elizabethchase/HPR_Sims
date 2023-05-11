@@ -46,6 +46,7 @@ impulse: R( X <- as.matrix(seq(from = 0, to = 10, length = n), ncol = 1);
 HPR: R( library(HPR);
         mymodel <- hpr(y = y, X = X, family = "poisson");
         mycurvefits <- get_preds(mymodel, alpha = 0.05);
+        mycurvefits$x <- X[,1];
         mycompperf <- get_diagnostics(mymodel))
   X: $preds
   y: $outcome

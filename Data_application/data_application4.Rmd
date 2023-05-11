@@ -15,6 +15,30 @@ library(kableExtra)
 
 bbt_data <- read_csv("~/Desktop/Research/Dissertation/Chapter_One/HPR_Sims/Data_application/menstruation_data2.csv")
 options(mc.cores=3)
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+tri_col <- gg_color_hue(3)
+
+quint_col <- c(tri_col, "violet", "orange")
+```
+
+Data:
+```{r hpr0, echo = FALSE, message=FALSE, results = FALSE, fig.keep = 'all', cache = TRUE}
+bbt_data_author <- filter(bbt_data, Name == "Author") %>% dplyr::select(Day, Temperature)
+
+typ_plot <- ggplot(data = bbt_data_author) + geom_point(aes(x = Day, y = Temperature)) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme_bw() + theme(legend.position = "bottom", text=element_text(size=12)) 
+
+ggsave("data_typ.pdf", typ_plot)
+
+bbt_data_sub <- filter(bbt_data, Name == "Carlie" | Name == "Blakeley" | Name == "Maya" | Name == "A4")
+
+atyp_plot <- ggplot(data = bbt_data_sub) + geom_point(aes(x = Day, y = Temperature)) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme_bw() + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Name, nrow = 2) + theme(strip.text.x = element_text(size=0))
+
+ggsave("data_atyp.pdf", atyp_plot)
 ```
 
 Menstruating women:
@@ -46,7 +70,16 @@ mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$f
 mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "A"
 
-fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2)
+lasso_tf1_lin <- trendfilter(y = dat$Temperature, ord = 0, verbose = FALSE)
+lasso_tf1_lin_cv <- cv.trendfilter(object = lasso_tf1_lin)
+mypreds <- predict(lasso_tf1_lin, lambda = lasso_tf1_lin_cv$lambda.min)
+colnames(mypreds$fit) <- NULL
+mycurvefits3 <- data.frame("Median" = mypreds$fit, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "TrendFilt", "Subject" = "A")
+
+mymodel <- medianFilter(inputData = dat$Temperature)
+mycurvefits4 <- data.frame("Median" = mymodel, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "MedFilt", "Subject" = "A")
+
+fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2, mycurvefits3, mycurvefits4)
 
 bbt_data_blakeley <- filter(bbt_data, Name == "Blakeley") %>% dplyr::select(Day, Temperature)
 
@@ -76,7 +109,16 @@ mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$f
 mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "B"
 
-fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+lasso_tf1_lin <- trendfilter(y = dat$Temperature, ord = 0, verbose = FALSE)
+lasso_tf1_lin_cv <- cv.trendfilter(object = lasso_tf1_lin)
+mypreds <- predict(lasso_tf1_lin, lambda = lasso_tf1_lin_cv$lambda.min)
+colnames(mypreds$fit) <- NULL
+mycurvefits3 <- data.frame("Median" = mypreds$fit, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "TrendFilt", "Subject" = "B")
+
+mymodel <- medianFilter(inputData = dat$Temperature)
+mycurvefits4 <- data.frame("Median" = mymodel, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "MedFilt", "Subject" = "B")
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2, mycurvefits3, mycurvefits4)
 
 bbt_data_a4 <- filter(bbt_data, Name == "A4") %>% dplyr::select(Day, Temperature)
 
@@ -106,7 +148,16 @@ mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$f
 mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "C"
 
-fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+lasso_tf1_lin <- trendfilter(y = dat$Temperature, ord = 0, verbose = FALSE)
+lasso_tf1_lin_cv <- cv.trendfilter(object = lasso_tf1_lin)
+mypreds <- predict(lasso_tf1_lin, lambda = lasso_tf1_lin_cv$lambda.min)
+colnames(mypreds$fit) <- NULL
+mycurvefits3 <- data.frame("Median" = mypreds$fit, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "TrendFilt", "Subject" = "C")
+
+mymodel <- medianFilter(inputData = dat$Temperature)
+mycurvefits4 <- data.frame("Median" = mymodel, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "MedFilt", "Subject" = "C")
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2, mycurvefits3, mycurvefits4)
 
 bbt_data_carlie <- filter(bbt_data, Name == "Carlie") %>% dplyr::select(Day, Temperature)
 
@@ -136,11 +187,20 @@ mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$f
 mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "D"
 
-fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+lasso_tf1_lin <- trendfilter(y = dat$Temperature, ord = 0, verbose = FALSE)
+lasso_tf1_lin_cv <- cv.trendfilter(object = lasso_tf1_lin)
+mypreds <- predict(lasso_tf1_lin, lambda = lasso_tf1_lin_cv$lambda.min)
+colnames(mypreds$fit) <- NULL
+mycurvefits3 <- data.frame("Median" = mypreds$fit, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "TrendFilt", "Subject" = "D")
+
+mymodel <- medianFilter(inputData = dat$Temperature)
+mycurvefits4 <- data.frame("Median" = mymodel, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "MedFilt", "Subject" = "D")
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2, mycurvefits3, mycurvefits4)
 
 wh_estimates <- data.frame("Subject" = c("A", "B", "C", "D"), "Hypothesis" = c(24.5, NA, 16.5, 15.5))
 
-mens_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model, linetype = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 2, scales = "free")
+mens_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "black", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model, linetype = Model), size = 1) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 2, scales = "free") + scale_color_manual(values = quint_col) + scale_fill_manual(values = quint_col)
 
 ggsave("mens_plot.pdf", mens_plot)
 ```
@@ -174,7 +234,16 @@ mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$f
 mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "A"
 
-fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2)
+lasso_tf1_lin <- trendfilter(y = dat$Temperature, ord = 0, verbose = FALSE)
+lasso_tf1_lin_cv <- cv.trendfilter(object = lasso_tf1_lin)
+mypreds <- predict(lasso_tf1_lin, lambda = lasso_tf1_lin_cv$lambda.min)
+colnames(mypreds$fit) <- NULL
+mycurvefits3 <- data.frame("Median" = mypreds$fit, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "TrendFilt", "Subject" = "A")
+
+mymodel <- medianFilter(inputData = dat$Temperature)
+mycurvefits4 <- data.frame("Median" = mymodel, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "MedFilt", "Subject" = "A")
+
+fulldat <- rbind(curve_estim1, mycurvefits, mycurvefits2, mycurvefits3, mycurvefits4)
 
 bbt_data_amber <- filter(bbt_data, Name == "Amber") %>% dplyr::select(Day, Temperature)
 
@@ -204,11 +273,20 @@ mycurvefits2 <- data.frame("Median" = adspline_fit$fit, "Lower" = adspline_fit$f
 mycurvefits2$Model <- "Adspline"
 mycurvefits2$Subject <- "B"
 
-fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2)
+lasso_tf1_lin <- trendfilter(y = dat$Temperature, ord = 0, verbose = FALSE)
+lasso_tf1_lin_cv <- cv.trendfilter(object = lasso_tf1_lin)
+mypreds <- predict(lasso_tf1_lin, lambda = lasso_tf1_lin_cv$lambda.min)
+colnames(mypreds$fit) <- NULL
+mycurvefits3 <- data.frame("Median" = mypreds$fit, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "TrendFilt", "Subject" = "B")
+
+mymodel <- medianFilter(inputData = dat$Temperature)
+mycurvefits4 <- data.frame("Median" = mymodel, "Lower" = NA, "Upper" = NA, "x" = dat$Day, "Mean" = NA, "Model" = "MedFilt", "Subject" = "B")
+
+fulldat <- rbind(fulldat, curve_estim1, mycurvefits, mycurvefits2, mycurvefits3, mycurvefits4)
 
 wh_estimates <- data.frame("Subject" = c("A", "B"), "Hypothesis" = c(15.5, 15.5))
 
-preg_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model, linetype = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 1, scales = "free")
+preg_plot <- ggplot(data = fulldat) + geom_vline(data = wh_estimates, aes(xintercept = Hypothesis), color = "black", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model, linetype = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = pointdat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) + facet_wrap(~Subject, nrow = 1, scales = "free") + scale_color_manual(values = quint_col) + scale_fill_manual(values = quint_col)
 
 ggsave("preg_plot.pdf", preg_plot, width = 6, height = 4)
 ```
@@ -226,7 +304,7 @@ curve_estim1 <- get_H(uni_hpr1, alpha = 0.05)
 curve_estim1$Model <- "HPR"
 mybetafits <- get_betas(uni_hpr1, alpha = 0.05, var_names = "fever")
   
-fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "orange", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median, color = Model)) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper, fill = Model), alpha = 0.2) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "bottom", text=element_text(size=12)) 
+fever_plot <- ggplot(data = curve_estim1) + geom_vline(xintercept = 20.5, color = "black", linetype = "dashed", size = 0.5, alpha = 0.8) + geom_line(aes(x = x, y = Median), color = tri_col[3]) + geom_ribbon(aes(x = x, ymin = Lower, ymax = Upper), alpha = 0.2, fill = tri_col[3]) + theme_bw() + geom_point(data = dat, aes(x = Day, y = Temperature), alpha = 0.5, size = 0.5) + xlab("Day of Menstrual Cycle") + scale_y_continuous("Basal Body Temperature (Fahrenheit)") + theme(legend.position = "none", text=element_text(size=12)) 
 
 fever_plot
 
